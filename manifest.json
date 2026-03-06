@@ -1,22 +1,24 @@
 {
-  "short_name": "OrrerySync",
-  "name": "Orrery Harmonics: Solar Sync",
+  "short_name": "Gamaflak 2",
+  "name": "Gamaflak_2 : Le Jeu",
+  "description": "Mon jeu HTML5 ultra fluide",
   "icons": [
     {
       "src": "icon-192.png",
       "type": "image/png",
-      "sizes": "192x192",
-      "purpose": "any maskable"
+      "sizes": "192x192"
     },
     {
       "src": "icon-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": "./index.html",
-  "background_color": "#050505",
+  "start_url": "/index.html",
+  "background_color": "#000000",
   "display": "standalone",
-  "orientation": "landscape",
-  "theme_color": "#050505"
+  "scope": "/",
+  "theme_color": "#000000",
+  "orientation": "portrait"
 }

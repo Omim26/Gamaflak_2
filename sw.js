@@ -1,18 +1,64 @@
-const CACHE_NAME = 'orrery-v1.1';
-const assets = ['./', './index.html', './manifest.json'];
+const CACHE_NAME = 'gamaflak2-v1';
+const ASSETS = [
+  '/',
+  '/index.html',
+  '/style.css',
+  '/script.js',
+  '/manifest.json',
+  '/icon.png' // Ajoute ici toutes tes ressources (images, sons)
+];
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(assets)));
-});
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW enregistré !'))
+      .catch(err => console.log('Erreur SW:', err));
+  });
+}
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.map(key => key !== CACHE_NAME ? caches.delete(key) : null)
-    ))
+
+
+// Installation : Mise en cache des fichiers
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('Cache ouvert');
+      return cache.addAll(ASSETS);
+    })
   );
+  // Force le SW à devenir actif immédiatement
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', (e) => {
-  e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
+// Activation : Nettoyage des anciens caches
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            console.log('Ancien cache supprimé');
+            return caches.delete(cache);
+          }
+        })
+      );
+    })
+  );
+  // Prend le contrôle des pages ouvertes immédiatement
+  return self.clients.claim();
+});
+
+// Fetch : Stratégie "Cache First, Network Fallback"
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      // Retourne le fichier du cache s'il existe, sinon fait la requête réseau
+      return response || fetch(event.request).catch(() => {
+        // Optionnel : page de secours si réseau coupé et pas en cache
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
+      });
+    })
+  );
 });
