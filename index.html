@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Orrery Harmonics</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { margin: 0; background: #050505; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        canvas { display: block; }
+        #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; pointer-events: auto; }
+        button, select { background: rgba(255,255,255,0.1); border: 1px solid white; color: white; padding: 12px; cursor: pointer; border-radius: 5px; font-size: 16px; }
+        #score-display { position: absolute; top: 20px; right: 20px; font-size: 24px; color: #00d4ff; text-shadow: 0 0 10px #00d4ff; }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div id="score-display">Score: 0</div>
+        <div class="controls">
+            <select id="startNote">
+                <option value="1">Do</option>
+                <option value="1.25">Mi</option>
+                <option value="1.5">Sol</option>
+            </select>
+            <button id="btnPlay">DÉMARRER / RESET</button>
+        </div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+// Enregistrement du Service Worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js');
+}
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score-display');
+let score = 0, audioCtx, isPlaying = false, lastTime = 0;
+
+const planets = [
+    { name: "Mercure", ua: 0.39, note: 261.63, duration: 3.9, color: "#A5A5A5" },
+    { name: "Vénus",   ua: 0.72, note: 293.66, duration: 7.2, color: "#E3BB76" },
+    { name: "Terre",   ua: 1.00, note: 329.63, duration: 10,  color: "#2271B3" },
+    { name: "Mars",    ua: 1.52, note: 349.23, duration: 15.2,color: "#E27B58" },
+    { name: "Jupiter", ua: 5.20, note: 392.00, duration: 26,  color: "#D39C7E" },
+    { name: "Saturne", ua: 9.50, note: 440.00, duration: 35,  color: "#C5AB6E" },
+    { name: "Uranus",  ua: 19.2, note: 493.88, duration: 55,  color: "#BBE1E4" },
+    { name: "Neptune", ua: 20.0, note: 523.25, duration: 65,  color: "#6081FF" }
+];
+
+let state = planets.map(p => ({ ...p, angle: 0, lastTrigger: 0 }));
+
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTone(freq) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const modifier = parseFloat(document.getElementById('startNote').value);
+    osc.frequency.setValueAtTime(freq * modifier, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.5);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 1.5);
+}
+
+function update(time = 0) {
+    if (!isPlaying) return;
+    const dt = (time - lastTime) / 1000;
+    lastTime = time;
+
+    ctx.fillStyle = "#050505";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+
+    state.forEach(p => {
+        const radius = 40 + (Math.log(p.ua + 1) * 70);
+        const oldAngle = p.angle;
+        p.angle += (Math.PI * 2 * dt) / p.duration;
+
+        if (Math.floor(p.angle / (Math.PI * 2)) > Math.floor(oldAngle / (Math.PI * 2))) {
+            p.lastTrigger = performance.now();
+            playTone(p.note);
+            checkHarmonies();
+        }
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(255,255,255,0.1)";
+        ctx.stroke();
+
+        const px = cx + Math.cos(p.angle) * radius;
+        const py = cy + Math.sin(p.angle) * radius;
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+    });
+    requestAnimationFrame(update);
+}
+
+function checkHarmonies() {
+    const now = performance.now();
+    const m = state[0].lastTrigger, t = state[2].lastTrigger, j = state[4].lastTrigger;
+    if (now - m < 300 && now - t < 300 && now - j < 300) {
+        score += 100;
+        scoreEl.innerText = `Score: ${score} - HARMONIE !`;
+        setTimeout(() => { if(isPlaying) scoreEl.innerText = `Score: ${score}`; }, 2000);
+    }
+}
+
+document.getElementById('btnPlay').onclick = () => {
+    initAudio();
+    if (!isPlaying) {
+        isPlaying = true;
+        lastTime = performance.now();
+        update();
+    } else {
+        location.reload();
+    }
+};
+
+window.onresize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+};
+window.onresize();
+</script>
+</body>
+</html>
