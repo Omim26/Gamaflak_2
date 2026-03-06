@@ -1,6 +1,6 @@
 {
-  "short_name": "Gamaflak 2",
-  "name": "Gamaflak_2 : Le Jeu",
+  "short_name": "Gamaflak",
+  "name": "omim26.github",
   "description": "Mon jeu HTML5 ultra fluide",
   "icons": [
     {
@@ -16,9 +16,9 @@
     }
   ],
   "start_url": "index.html",
-  "background_color": "#000000",
+  "background_color": "#ffffff",
   "display": "standalone",
-  "scope": "./",
+  "scope": "/",
   "theme_color": "#000000",
   "orientation": "portrait"
 }
