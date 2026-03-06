@@ -15,6 +15,12 @@
         #score-display { position: absolute; top: 20px; right: 20px; font-size: 24px; color: #00d4ff; text-shadow: 0 0 10px #00d4ff; }
     </style>
 </head>
+
+
+
+
+
+
 <body>
     <div id="ui">
         <div id="score-display">Score: 0</div>
@@ -30,10 +36,12 @@
     <canvas id="gameCanvas"></canvas>
 
 <script>
-// Enregistrement du Service Worker
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
-}
+                   // Enregistrement du Service Worker
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log("Service Worker Enregistré !"));
+  }
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
