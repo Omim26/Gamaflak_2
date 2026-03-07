@@ -1,11 +1,11 @@
 const CACHE_NAME = 'gamaflak2-v1';
 const ASSETS = [
   '/',
-  '/index.html',
-  '/style.css',
-  '/script.js',
-  '/manifest.json',
-  '/icon.png' // Ajoute ici toutes tes ressources (images, sons)
+  'index.html',
+  'style.css',
+  'script.js',
+  'manifest.json',
+  'icon.png' // Ajoute ici toutes tes ressources (images, sons)
 ];
 
 if ('serviceWorker' in navigator) {
