@@ -11,16 +11,19 @@
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
         .btn { background: #6081FF; border: none; color: white; padding: 18px; border-radius: 35px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 20px rgba(96,129,255,0.4); transition: 0.3s; width: 130px; }
         .btn-share { background: #25D366; width: 180px; margin-top: 15px; }
-        .btn:active { transform: scale(0.9); opacity: 0.8; }
         
         #ui { position: absolute; top: 15px; left: 15px; z-index: 50; display: none; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border-left: 5px solid #ffcc00; }
-        #sun { width: 30px; height: 30px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 40px #ff6600; position: absolute; z-index: 10; }
+        #distance-info { position: absolute; bottom: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; border: 1px solid #444; font-size: 12px; color: #aaa; text-align: right; pointer-events: none; }
         
+        /* Sun as Home Button */
+        #sun { width: 35px; height: 35px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 40px #ff6600; position: absolute; z-index: 60; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 10px; transition: 0.2s; }
+        #sun:active { transform: scale(0.8); }
+
         .orbit { position: absolute; border: 1.2px solid; border-radius: 50%; animation: rotate linear infinite; pointer-events: none; }
         .planet { 
-            position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 34px; height: 34px; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; cursor: pointer; pointer-events: auto;
-            box-shadow: inset -5px -5px 12px rgba(0,0,0,0.8); 
+            position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 36px; height: 36px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer; pointer-events: auto;
+            box-shadow: inset -5px -5px 12px rgba(0,0,0,0.8); text-shadow: 0px 0px 2px rgba(0,0,0,0.8);
         }
         
         #new-record { color: #ffcc00; font-weight: bold; display: none; animation: blink 0.5s infinite; font-size: 14px; }
@@ -36,7 +39,12 @@
         <b>SCORE: <span id="score">0</span></b><br>
         <small>BEST: <span id="highscore">0</span></small><br>
         <div id="new-record">★ NEW RECORD! ★</div>
-        <button class="btn btn-share" style="padding: 8px; font-size: 12px; height: auto;" onclick="shareScore()">SHARE SCORE</button>
+        <button class="btn btn-share" style="padding: 8px; font-size: 11px; height: auto;" onclick="shareScore()">SHARE SCORE</button>
+    </div>
+
+    <div id="distance-info">
+        <span id="dist-name" style="color:white; font-weight:bold;">Tap a planet</span><br>
+        <span id="dist-val">---</span> million km
     </div>
 
     <div id="overlay">
@@ -50,7 +58,10 @@
         </div>
     </div>
 
-    <div id="sun"></div>
+    <!-- Sun = Home Button -->
+    <div id="sun" onclick="goHome()">HOME</div>
+
+    <div id="system-container"></div>
 
     <script>
         let score = 0, audioCtx = null, multiplier = 1, currentMode = "";
@@ -71,16 +82,28 @@
             setTimeout(() => {
                 document.getElementById('overlay').style.display = 'none';
                 document.getElementById('ui').style.display = 'block';
+                document.getElementById('distance-info').style.display = 'block';
                 document.getElementById('modeDisp').innerText = name;
                 renderSystem();
             }, 300);
         }
 
-        function updateScore(pts, isGiant) {
+        function goHome() {
+            document.getElementById('system-container').innerHTML = "";
+            document.getElementById('overlay').style.display = 'flex';
+            document.getElementById('ui').style.display = 'none';
+            document.getElementById('distance-info').style.display = 'none';
+            score = 0; recordBeaten = false;
+            document.getElementById('new-record').style.display = 'none';
+        }
+
+        function updateScore(pts, isGiant, pName, pDist) {
             score += Math.round(pts * multiplier);
             document.getElementById('score').innerText = score;
+            document.getElementById('dist-name').innerText = pName;
+            document.getElementById('dist-val').innerText = pDist;
+
             if (isGiant && navigator.vibrate) navigator.vibrate(30);
-            
             if(score > highscore) {
                 if(!recordBeaten && highscore > 0) {
                     document.getElementById('new-record').style.display = 'block';
@@ -95,7 +118,7 @@
         async function shareScore() {
             const shareData = {
                 title: 'Gamaflak 2',
-                text: `I just hit a NEW RECORD of ${score} points in Gamaflak 2! Can you beat me?`,
+                text: `I just hit a NEW RECORD of ${score} points in Stellar Harmony!`,
                 url: window.location.href
             };
             try { if (navigator.share) await navigator.share(shareData); } catch (err) {}
@@ -113,30 +136,41 @@
         }
 
         function renderSystem() {
+            const container = document.getElementById('system-container');
             const planets = [
-                {t:"Me", c:"#979797", d:85, s:4, f:261, p:10, g:false},
-                {t:"Ve", c:"#E3BB76", d:130, s:7, f:293, p:15, g:false},
-                {t:"Ea", c:"#2271B3", d:180, s:10, f:329, p:20, g:false},
-                {t:"Ma", c:"#E27B58", d:230, s:13, f:349, p:25, g:false},
-                {t:"Ju", c:"#D39C7E", d:310, s:20, f:392, p:40, g:true},
-                {t:"Sa", c:"#C5AB6E", d:390, s:25, f:440, p:50, g:true},
-                {t:"Ur", c:"#BBE1E4", d:470, s:35, f:493, p:60, g:true},
-                {t:"Ne", c:"#6081FF", d:550, s:45, f:523, p:70, g:true}
+                {t:"Me", c:"#979797", d:85, s:4, f:261, p:10, g:false, dist:"57.9", tc:"white"},
+                {t:"Ve", c:"#E3BB76", d:130, s:7, f:293, p:15, g:false, dist:"108.2", tc:"black"},
+                {t:"Ea", c:"#2271B3", d:180, s:10, f:329, p:20, g:false, dist:"149.6", tc:"white"},
+                {t:"Ma", c:"#E27B58", d:230, s:13, f:349, p:25, g:false, dist:"227.9", tc:"white"},
+                {t:"Ju", c:"#D39C7E", d:310, s:20, f:392, p:40, g:true, dist:"778.6", tc:"black"},
+                {t:"Sa", c:"#C5AB6E", d:390, s:25, f:440, p:50, g:true, dist:"1433", tc:"black"},
+                {t:"Ur", c:"#BBE1E4", d:470, s:35, f:493, p:60, g:true, dist:"2872", tc:"black"},
+                {t:"Ne", c:"#6081FF", d:550, s:45, f:523, p:70, g:true, dist:"4495", tc:"white"}
             ];
+            
             planets.forEach(p => {
                 const orb = document.createElement('div');
                 orb.className = 'orbit';
                 orb.style.width = orb.style.height = p.d + 'px';
                 orb.style.animationDuration = p.s + 's';
                 orb.style.borderColor = p.c + '44';
+                
                 const pl = document.createElement('div');
                 pl.className = `planet`;
                 pl.style.backgroundColor = p.c;
+                pl.style.color = p.tc; // Custom text color for readability
                 pl.innerText = p.t;
-                pl.onclick = (e) => { e.stopPropagation(); playSpaceNote(p.f); updateScore(p.p, p.g); };
+                pl.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    playSpaceNote(p.f); 
+                    updateScore(p.p, p.g, p.t === "Ea" ? "Earth" : p.t, p.dist); 
+                };
+                
                 orb.appendChild(pl);
-                document.body.appendChild(orb);
+                container.appendChild(orb);
             });
+            
+            // Asteroid Belt
             const belt = document.createElement('div');
             belt.className = 'orbit'; belt.style.width = belt.style.height = '270px';
             belt.style.animationDuration = '22s'; belt.style.border = 'none';
@@ -148,7 +182,7 @@
                 a.style.top = (Math.sin(ang)*135 + 135) + 'px';
                 belt.appendChild(a);
             }
-            document.body.appendChild(belt);
+            container.appendChild(belt);
         }
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     </script>
