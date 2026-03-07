@@ -7,42 +7,50 @@
     <link rel="manifest" href="manifest.json">
     <style>
         @import url('https://googleapis.com');
-        
         * { box-sizing: border-box; perspective: none !important; transform-style: flat !important; }
         body { margin: 0; background: #020205; color: white; font-family: 'Orbitron', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
         
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-        .btn { background: #6081FF; border: none; color: white; padding: 15px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; width: 130px; font-family: 'Orbitron', sans-serif; }
+        .btn { background: #6081FF; border: none; color: white; padding: 15px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; width: 140px; font-family: 'Orbitron', sans-serif; transition: 0.2s; }
         .btn:active { background: #ffcc00; color: black; }
         
-        input { background: rgba(255,255,255,0.1); border: 2px solid #6081FF; border-radius: 20px; padding: 12px; color: white; margin-bottom: 15px; text-align: center; width: 220px; font-size: 16px; outline: none; font-family: 'Orbitron', sans-serif; }
+        input { background: rgba(255,255,255,0.1); border: 2px solid #6081FF; border-radius: 20px; padding: 12px; color: white; margin-bottom: 15px; text-align: center; width: 250px; font-size: 16px; outline: none; font-family: 'Orbitron', sans-serif; }
 
         #ui { position: absolute; top: 15px; left: 15px; z-index: 50; display: none; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border-left: 5px solid #ffcc00; }
-        #leaderboard { position: absolute; top: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 15px; min-width: 150px; }
+        
+        /* Leaderboard Style */
+        #leaderboard { position: absolute; top: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 15px; min-width: 180px; border: 1px solid #444; }
+        .leader-item { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; padding: 4px 8px; border-radius: 5px; }
+        .me-highlight { background: rgba(255, 204, 0, 0.2); border: 1px solid #ffcc00; color: #ffcc00; font-weight: bold; }
+
+        #dist-panel { position: absolute; bottom: 20px; right: 20px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 12px; border-radius: 10px; border: 1px solid #444; font-size: 13px; text-align: right; min-width: 160px; }
         #sun { width: 45px; height: 45px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 30px #ff6600; position: absolute; z-index: 90; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 24px; }
         .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; animation: rotate linear infinite; pointer-events: none; }
-        .planet { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; cursor: pointer; pointer-events: auto; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.8); z-index: 80; }
+        .planet { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; cursor: pointer; pointer-events: auto; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.8); z-index: 80; }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
     <div id="ui">
-        <b id="my-name-display" style="color:#ffcc00; text-transform: uppercase;">PLAYER</b><br>
-        <small>MODE: <span id="modeDisp">-</span></small><br>
-        <b>SCORE: <span id="score">0</span></b>
+        <b style="color:#ffcc00">MODE: <span id="modeDisp">-</span></b><br>
+        <b>MY SCORE: <span id="score">0</span></b>
     </div>
 
     <div id="leaderboard">
-        <div style="color:#ffcc00; margin-bottom:5px; font-size: 11px;">LIVE SCORES</div>
-        <div id="player-list" style="font-size: 13px;"></div>
+        <div style="color:#ffcc00; margin-bottom:10px; font-size: 11px; text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px;">LIVE RANKING</div>
+        <div id="player-list"></div>
+    </div>
+
+    <div id="dist-panel">
+        <span id="p-full" style="color:#ffcc00; font-weight:bold;">Target</span><br>
+        <span id="p-val" style="font-size:16px;">---</span> <small>M km</small>
     </div>
 
     <div id="overlay">
         <h1 style="letter-spacing: 5px; color:#6081FF;">GAMAFLAK</h1>
         
-        <!-- STEP 1: NOTE -->
         <div id="step-note">
             <p>1. CHOOSE FREQUENCY</p>
             <div class="btn-grid">
@@ -53,93 +61,154 @@
             </div>
         </div>
 
-        <!-- STEP 2: PLAYERS MODE -->
-        <div id="step-mode" style="display:none;">
-            <p>2. CHOOSE PLAYERS</p>
+        <div id="step-count" style="display:none;">
+            <p>2. HOW MANY PLAYERS?</p>
             <div class="btn-grid">
-                <button class="btn" onclick="setMode(1)">SOLO</button>
-                <button class="btn" style="background:#25D366" onclick="setMode(2)">2 PLAYERS</button>
-                <button class="btn" style="background:#25D366" onclick="setMode(4)">4 PLAYERS</button>
+                <button class="btn" onclick="setPlayerCount(1)">1 PLAYER</button>
+                <button class="btn" onclick="setPlayerCount(2)">2 PLAYERS</button>
+                <button class="btn" onclick="setPlayerCount(4)">4 PLAYERS</button>
             </div>
         </div>
 
-        <!-- STEP 3: NAME & START -->
-        <div id="step-name" style="display:none;">
-            <p>3. ENTER YOUR NAME</p>
-            <input type="text" id="playerNameInput" placeholder="Explorer Name..." maxlength="10">
+        <div id="step-names" style="display:none;">
+            <p id="name-prompt">ENTER YOUR NAME</p>
+            <input type="text" id="nameInput" placeholder="Name..." maxlength="10">
             <br>
-            <button class="btn" style="width:220px; background:#ffcc00; color:black;" onclick="finalStart()">START GAME</button>
+            <button class="btn" id="nameNextBtn" style="width:220px; background:#ffcc00; color:black;" onclick="nextName()">NEXT</button>
         </div>
     </div>
 
     <div id="system-container" style="position:relative; width:100vw; height:100vh; display:flex; align-items:center; justify-content:center;">
         <div id="sun" onclick="location.reload()">S</div>
     </div>
+	
+	
+	<div id="ui">
+	    <b id="my-name-display" style="color:#ffcc00; text-transform: uppercase;">PLAYER</b><br>
+	    <small>MODE: <span id="modeDisp">-</span></small><br>
+	    <b>SCORE: <span id="score">0</span></b><br>
+	    <!-- Nouveau bouton de partage -->
+	    <button onclick="shareGame()" style="background:#25D366; border:none; color:white; border-radius:10px; padding:5px 10px; margin-top:5px; font-family:'Orbitron'; font-size:10px; cursor:pointer;">INVITE FRIENDS</button>
+	</div>
+
+	
+	
 
     <script src="https://ably.com"></script>
     <script>
-        let score = 0, audioCtx = null, multiplier = 1, selMode = "", myName = "", ably, channel;
-        let playersScores = {};
-        const ABLY_KEY = 'TON_API_KEY_ABLY'; 
+		
+		// Variable à ajouter au tout début de tes scripts (en haut)
+				let currentRank = 1; 
+	
+        let score = 0, audioCtx = null, multiplier = 1, selMode = "";
+        let targetPlayers = 1, currentNameIndex = 1, playerNames = [], myPrimaryName = "";
+        let playersScores = {}, ably, channel;
+
+        const ABLY_KEY = 'fLnNJA.dOy3HQ:GLmXxSIjEKpZwMm4n54ZE91hfEYMd1NS3veSJv9-n_0'; // Remplace par ta clé Ably
 
         function setNote(mode, mult) {
             selMode = mode; multiplier = mult;
             document.getElementById('step-note').style.display = 'none';
-            document.getElementById('step-mode').style.display = 'block';
+            document.getElementById('step-count').style.display = 'block';
         }
 
-        function setMode(p) {
-            document.getElementById('step-mode').style.display = 'none';
-            document.getElementById('step-name').style.display = 'block';
+        function setPlayerCount(count) {
+            targetPlayers = count;
+            document.getElementById('step-count').style.display = 'none';
+            document.getElementById('step-names').style.display = 'block';
+            updateNamePrompt();
+        }
+
+        function updateNamePrompt() {
+            document.getElementById('name-prompt').innerText = `ENTER NAME FOR PLAYER ${currentNameIndex}`;
+            document.getElementById('nameInput').value = "";
+            if(currentNameIndex === targetPlayers) document.getElementById('nameNextBtn').innerText = "START GAME";
+        }
+
+        function nextName() {
+            let n = document.getElementById('nameInput').value.trim();
+            let finalName = n || `P${currentNameIndex}`;
+            playerNames.push(finalName);
+            if(currentNameIndex === 1) myPrimaryName = finalName; // Le premier nom saisi est l'utilisateur actuel
+            
+            if(currentNameIndex < targetPlayers) {
+                currentNameIndex++;
+                updateNamePrompt();
+            } else {
+                finalStart();
+            }
         }
 
         function finalStart() {
-            let input = document.getElementById('playerNameInput').value.trim();
-            myName = input || "Guest_" + Math.floor(Math.random()*99);
-            
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            playerNames.forEach(name => playersScores[name] = 0);
             
             if (typeof Ably !== 'undefined' && ABLY_KEY !== 'TON_API_KEY_ABLY') {
                 ably = new Ably.Realtime(ABLY_KEY);
                 channel = ably.channels.get('gamaflak-room');
                 channel.subscribe('score-update', (msg) => {
                     playersScores[msg.data.user] = msg.data.score;
-                    updateLeaderboard();
+                    updateBoard();
                 });
             }
 
             document.getElementById('overlay').style.display = 'none';
             document.getElementById('ui').style.display = 'block';
             document.getElementById('leaderboard').style.display = 'block';
+            document.getElementById('dist-panel').style.display = 'block';
             document.getElementById('modeDisp').innerText = selMode;
-            document.getElementById('my-name-display').innerText = myName;
+            updateBoard();
             renderSystem();
         }
 
-        function updateScore(pts, key) {
+        function updateScore(pts, key, fullName, dist) {
             score += Math.round(pts * multiplier);
+            playersScores[myPrimaryName] = score;
             document.getElementById('score').innerText = score;
-            playersScores[myName] = score;
-            updateLeaderboard();
-            if(channel) channel.publish('score-update', { user: myName, score: score });
+            document.getElementById('p-full').innerText = fullName;
+            document.getElementById('p-val').innerText = dist;
+            updateBoard();
+            if(channel) channel.publish('score-update', { user: myPrimaryName, score: score });
         }
 
-        function updateLeaderboard() {
-            const list = document.getElementById('player-list');
-            list.innerHTML = "";
-            Object.keys(playersScores).sort((a,b) => playersScores[b] - playersScores[a]).forEach(user => {
-                const item = document.createElement('div');
-                item.style.color = (user === myName) ? "#ffcc00" : "white";
-                item.innerText = `${user}: ${playersScores[user]}`;
-                list.appendChild(item);
-            });
-        }
+        
+		
+
+		function updateBoard() {
+		    const list = document.getElementById('player-list');
+		    list.innerHTML = "";
+		    
+		    // 1. On trie les joueurs par score
+		    const sortedPlayers = Object.keys(playersScores)
+		        .sort((a, b) => playersScores[b] - playersScores[a]);
+
+		    // 2. LOGIQUE DE VIBRATION (Le détecteur de chute)
+		    const newRank = sortedPlayers.indexOf(myPrimaryName) + 1;
+		    
+		    // Si ton nouveau rang est plus grand (ex: tu passes de 1er à 2ème)
+		    if (newRank > currentRank && newRank !== 0) {
+		        if (navigator.vibrate) {
+		            // Le téléphone vibre 3 fois rapidement pour t'alerter
+		            navigator.vibrate([100, 50, 100, 50, 100]); 
+		        }
+		    }
+		    currentRank = newRank; // On met à jour ton rang actuel
+
+		    // 3. On affiche la liste mise à jour
+		    sortedPlayers.forEach((u, index) => {
+		        const div = document.createElement('div');
+		        div.className = `leader-item ${u === myPrimaryName ? 'me-highlight' : ''}`;
+		        div.innerHTML = `<span>#${index + 1} ${u}</span><span>${playersScores[u]}</span>`;
+		        list.appendChild(div);
+		    });
+		}
+
+		
 
         function playNote(f) {
             if (!audioCtx) return;
             const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-            o.type = 'triangle';
-            o.frequency.setValueAtTime(f, audioCtx.currentTime);
+            o.type = 'triangle'; o.frequency.setValueAtTime(f, audioCtx.currentTime);
             g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1);
             o.connect(g); g.connect(audioCtx.destination);
             o.start(); o.stop(audioCtx.currentTime + 1);
@@ -147,30 +216,25 @@
 
         function renderSystem() {
             const container = document.getElementById('system-container');
-            const planetData = {
-                "Me": {c:"#979797", orb:95, speed:5, f:261, p:10},
-                "Ve": {c:"#E3BB76", orb:145, speed:8, f:293, p:15},
-                "Ea": {c:"#2271B3", orb:195, speed:12, f:329, p:20},
-                "Ma": {c:"#E27B58", orb:245, speed:16, f:349, p:25},
-                "Ju": {c:"#D39C7E", orb:325, speed:22, f:392, p:40},
-                "Sa": {c:"#C5AB6E", orb:405, speed:30, f:440, p:50},
-                "Ur": {c:"#BBE1E4", orb:485, speed:40, f:493, p:60},
-                "Ne": {c:"#6081FF", orb:565, speed:50, f:523, p:70}
+            const data = {
+                "Me": {full:"Mercury", d:"57.9", c:"#979797", orb:95, s:5, f:261, p:10},
+                "Ve": {full:"Venus", d:"108.2", c:"#E3BB76", orb:140, s:8, f:293, p:15},
+                "Ea": {full:"Earth", d:"149.6", c:"#2271B3", orb:185, s:12, f:329, p:20},
+                "Ma": {full:"Mars", d:"227.9", c:"#E27B58", orb:230, s:16, f:349, p:25},
+                "Ju": {full:"Jupiter", d:"778.6", c:"#D39C7E", orb:310, s:22, f:392, p:40},
+                "Sa": {full:"Saturn", d:"1433", c:"#385", s:30, f:440, p:50},
+                "Ur": {full:"Uranus", d:"2872", c:"#BBE1E4", orb:460, s:40, f:493, p:60},
+                "Ne": {full:"Neptune", d:"4495", c:"#6081FF", orb:535, s:50, f:523, p:70}
             };
-            Object.keys(planetData).forEach(key => {
-                const p = planetData[key];
+            Object.keys(data).forEach(k => {
+                const p = data[k];
                 const orb = document.createElement('div');
-                orb.className = 'orbit';
-                orb.style.width = orb.style.height = p.orb + 'px';
-                orb.style.animationDuration = p.speed + 's';
-                orb.style.borderColor = p.c + '66';
+                orb.className = 'orbit'; orb.style.width = orb.style.height = p.orb + 'px';
+                orb.style.animationDuration = p.s + 's'; orb.style.borderColor = p.c + '55';
                 const pl = document.createElement('div');
-                pl.className = 'planet';
-                pl.style.backgroundColor = p.c;
-                pl.innerText = key;
-                pl.onclick = (e) => { e.stopPropagation(); playNote(p.f); updateScore(p.p, key); };
-                orb.appendChild(pl);
-                container.appendChild(orb);
+                pl.className = 'planet'; pl.style.backgroundColor = p.c; pl.innerText = k;
+                pl.onclick = (e) => { e.stopPropagation(); playNote(p.f); updateScore(p.p, k, p.full, p.d); };
+                orb.appendChild(pl); container.appendChild(orb);
             });
         }
     </script>
