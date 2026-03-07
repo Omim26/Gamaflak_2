@@ -6,63 +6,23 @@
     <title>Gamaflak</title>
     <link rel="manifest" href="manifest.json">
     <style>
-		
-		
-		
-		
-		    /* TOUT EN HAUT : Importation de la police futuriste */
-		    @import url('https://googleapis.com');
-
-		    /* Ensuite, tes styles habituels */
-		    * { 
-		        box-sizing: border-box; 
-		        perspective: none !important; 
-		        transform-style: flat !important; 
-		    }
-		    
-		    body { 
-		        margin: 0; 
-		        background: #020205; 
-		        color: white; 
-		        /* APPLIQUER LA POLICE ICI */
-		        font-family: 'Orbitron', sans-serif; 
-		        height: 100vh; 
-		        overflow: hidden; 
-		        display: flex; 
-		        align-items: center; 
-		        justify-content: center; 
-		    }
-
-		    h1 {
-				
-				text-transform: uppercase;
-				 
-		        font-weight: 700; 
-		        letter-spacing: 10px; 
-		        color: #6081FF;
-		        text-shadow: 0 0 15px rgba(96,129,255,0.6);
-		    }
-
-		    /* Le reste de ton CSS... */
-		
-
-	
-	
-	
+        @import url('https://googleapis.com');
+        
         * { box-sizing: border-box; perspective: none !important; transform-style: flat !important; }
-        body { margin: 0; background: #020205; color: white; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        body { margin: 0; background: #020205; color: white; font-family: 'Orbitron', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
         
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-        .btn { background: #6081FF; border: none; color: white; padding: 15px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; width: 130px; transition: 0.2s; }
+        .btn { background: #6081FF; border: none; color: white; padding: 15px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; width: 130px; font-family: 'Orbitron', sans-serif; }
         .btn:active { background: #ffcc00; color: black; }
-        input { background: rgba(255,255,255,0.1); border: 2px solid #6081FF; border-radius: 20px; padding: 12px; color: white; margin-bottom: 15px; text-align: center; width: 200px; font-size: 16px; outline: none; }
+        
+        input { background: rgba(255,255,255,0.1); border: 2px solid #6081FF; border-radius: 20px; padding: 12px; color: white; margin-bottom: 15px; text-align: center; width: 220px; font-size: 16px; outline: none; font-family: 'Orbitron', sans-serif; }
 
         #ui { position: absolute; top: 15px; left: 15px; z-index: 50; display: none; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border-left: 5px solid #ffcc00; }
         #leaderboard { position: absolute; top: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 15px; min-width: 150px; }
-        #sun { width: 40px; height: 40px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 30px #ff6600; position: absolute; z-index: 90; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 22px; }
+        #sun { width: 45px; height: 45px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 30px #ff6600; position: absolute; z-index: 90; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 24px; }
         .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; animation: rotate linear infinite; pointer-events: none; }
-        .planet { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; cursor: pointer; pointer-events: auto; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.8); z-index: 80; }
+        .planet { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; cursor: pointer; pointer-events: auto; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.8); z-index: 80; }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -75,16 +35,16 @@
     </div>
 
     <div id="leaderboard">
-        <div style="color:#ffcc00; margin-bottom:5px; font-size: 12px;">LIVE SCORES</div>
-        <div id="player-list" style="font-size: 14px;"></div>
+        <div style="color:#ffcc00; margin-bottom:5px; font-size: 11px;">LIVE SCORES</div>
+        <div id="player-list" style="font-size: 13px;"></div>
     </div>
 
     <div id="overlay">
-        <h1>GAMAFLAK</h1>
+        <h1 style="letter-spacing: 5px; color:#6081FF;">GAMAFLAK</h1>
         
-        <!-- ÉTAPE 1 : CHOIX DE LA NOTE -->
+        <!-- STEP 1: NOTE -->
         <div id="step-note">
-            <p>CHOOSE FREQUENCY :</p>
+            <p>1. CHOOSE FREQUENCY</p>
             <div class="btn-grid">
                 <button class="btn" onclick="setNote('DO', 1)">C / DO</button>
                 <button class="btn" onclick="setNote('MI', 1.5)">E / MI</button>
@@ -93,16 +53,22 @@
             </div>
         </div>
 
-        <!-- ÉTAPE 2 : NOM ET NOMBRE DE JOUEURS -->
-        <div id="step-players" style="display:none;">
-            <p>ENTER YOUR NAME :</p>
-            <input type="text" id="playerNameInput" placeholder="Name..." maxlength="10">
-            <p>SELECT MODE :</p>
+        <!-- STEP 2: PLAYERS MODE -->
+        <div id="step-mode" style="display:none;">
+            <p>2. CHOOSE PLAYERS</p>
             <div class="btn-grid">
-                <button class="btn" onclick="startMulti(1)">SOLO</button>
-                <button class="btn" style="background:#25D366" onclick="startMulti(2)">2 PLAYERS</button>
-                <button class="btn" style="background:#25D366" onclick="startMulti(4)">4 PLAYERS</button>
+                <button class="btn" onclick="setMode(1)">SOLO</button>
+                <button class="btn" style="background:#25D366" onclick="setMode(2)">2 PLAYERS</button>
+                <button class="btn" style="background:#25D366" onclick="setMode(4)">4 PLAYERS</button>
             </div>
+        </div>
+
+        <!-- STEP 3: NAME & START -->
+        <div id="step-name" style="display:none;">
+            <p>3. ENTER YOUR NAME</p>
+            <input type="text" id="playerNameInput" placeholder="Explorer Name..." maxlength="10">
+            <br>
+            <button class="btn" style="width:220px; background:#ffcc00; color:black;" onclick="finalStart()">START GAME</button>
         </div>
     </div>
 
@@ -110,28 +76,29 @@
         <div id="sun" onclick="location.reload()">S</div>
     </div>
 
-    <!-- Chargement Ably sécurisé -->
     <script src="https://ably.com"></script>
     <script>
         let score = 0, audioCtx = null, multiplier = 1, selMode = "", myName = "", ably, channel;
         let playersScores = {};
-
         const ABLY_KEY = 'TON_API_KEY_ABLY'; 
 
         function setNote(mode, mult) {
             selMode = mode; multiplier = mult;
             document.getElementById('step-note').style.display = 'none';
-            document.getElementById('step-players').style.display = 'block';
+            document.getElementById('step-mode').style.display = 'block';
         }
 
-        function startMulti(pCount) {
+        function setMode(p) {
+            document.getElementById('step-mode').style.display = 'none';
+            document.getElementById('step-name').style.display = 'block';
+        }
+
+        function finalStart() {
             let input = document.getElementById('playerNameInput').value.trim();
-            myName = input || "Player_" + Math.floor(Math.random()*100);
+            myName = input || "Guest_" + Math.floor(Math.random()*99);
             
-            // Initialisation Audio
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             
-            // Initialisation Ably (si clé présente)
             if (typeof Ably !== 'undefined' && ABLY_KEY !== 'TON_API_KEY_ABLY') {
                 ably = new Ably.Realtime(ABLY_KEY);
                 channel = ably.channels.get('gamaflak-room');
@@ -146,7 +113,6 @@
             document.getElementById('leaderboard').style.display = 'block';
             document.getElementById('modeDisp').innerText = selMode;
             document.getElementById('my-name-display').innerText = myName;
-            
             renderSystem();
         }
 
@@ -155,10 +121,7 @@
             document.getElementById('score').innerText = score;
             playersScores[myName] = score;
             updateLeaderboard();
-
-            if(channel) {
-                channel.publish('score-update', { user: myName, score: score });
-            }
+            if(channel) channel.publish('score-update', { user: myName, score: score });
         }
 
         function updateLeaderboard() {
@@ -194,7 +157,6 @@
                 "Ur": {c:"#BBE1E4", orb:485, speed:40, f:493, p:60},
                 "Ne": {c:"#6081FF", orb:565, speed:50, f:523, p:70}
             };
-
             Object.keys(planetData).forEach(key => {
                 const p = planetData[key];
                 const orb = document.createElement('div');
