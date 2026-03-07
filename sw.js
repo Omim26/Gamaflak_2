@@ -56,7 +56,7 @@ self.addEventListener('fetch', (event) => {
       return response || fetch(event.request).catch(() => {
         // Optionnel : page de secours si réseau coupé et pas en cache
         if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
+          return caches.match('index.html');
         }
       });
     })
