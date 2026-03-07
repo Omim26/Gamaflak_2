@@ -3,86 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gamaflak 2 - Système Solaire Animé</title>
+    <title>Gamaflak 2 - Harmonie des Sphères</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        body { 
-            margin: 0; background: radial-gradient(circle, #1b2735 0%, #090a0f 100%); 
-            height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center;
-        }
+        body { margin: 0; background: #050508; color: white; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        
+        /* Menu et UI */
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .btn { background: #6081FF; border: none; color: white; padding: 15px 30px; margin: 10px; border-radius: 25px; font-size: 18px; cursor: pointer; transition: 0.3s; }
+        .btn:hover { background: #2271B3; transform: scale(1.1); }
+        #ui { position: absolute; top: 20px; left: 20px; font-size: 22px; z-index: 50; display: none; border-left: 4px solid #6081FF; padding-left: 10px; }
 
-        /* Le Soleil */
-        #sun {
-            width: 60px; height: 60px; background: #ffcc00; border-radius: 50%;
-            box-shadow: 0 0 50px #ff6600, inset -5px -5px 15px rgba(0,0,0,0.3);
-            position: absolute; display: flex; align-items: center; justify-content: center;
-            font-weight: bold; color: #000; font-size: 20px; z-index: 10;
-        }
+        /* Soleil réduit (30px) */
+        #sun { width: 30px; height: 30px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 40px #ff6600; position: absolute; z-index: 10; display: flex; align-items: center; justify-content: center; font-size: 10px; color: black; font-weight: bold; }
 
-        /* L'espace de révolution */
-        .orbit {
-            position: absolute; border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%; animation: rotate linear infinite;
+        /* Orbites et Planètes */
+        .orbit { position: absolute; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 50%; animation: rotate linear infinite; pointer-events: none; }
+        .planet { 
+            position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); 
+            width: 32px; height: 32px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 13px; font-weight: bold; cursor: pointer; pointer-events: auto;
+            box-shadow: inset -6px -6px 12px rgba(0,0,0,0.6); transition: 0.2s;
         }
+        .planet:hover { filter: brightness(1.3); }
 
-        /* La Sphère Planétaire */
-        .planet {
-            position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%);
-            width: 30px; height: 30px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 14px; font-weight: bold; color: white;
-            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.7);
-        }
-
-        /* Animation de rotation */
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* Configuration des 8 planètes (Taille orbite | Vitesse rotation | Couleur) */
-        .mercure { width: 100px; height: 100px; animation-duration: 4s; }
-        .m-body { background: #979797; }
-
-        .venus { width: 150px; height: 150px; animation-duration: 7s; }
-        .v-body { background: #E3BB76; }
-
-        .terre { width: 200px; height: 200px; animation-duration: 10s; }
-        .t-body { background: #2271B3; }
-
-        .mars { width: 250px; height: 250px; animation-duration: 13s; }
-        .ma-body { background: #E27B58; }
-
-        .jupiter { width: 320px; height: 320px; animation-duration: 20s; }
-        .j-body { background: #D39C7E; width: 45px; height: 45px; font-size: 20px; }
-
-        .saturne { width: 400px; height: 400px; animation-duration: 25s; }
-        .s-body { background: #C5AB6E; width: 40px; height: 40px; }
-
-        .uranus { width: 460px; height: 460px; animation-duration: 35s; }
-        .u-body { background: #BBE1E4; color: #333; }
-
-        .neptune { width: 520px; height: 520px; animation-duration: 45s; }
-        .n-body { background: #6081FF; }
+        /* Couleurs Planètes */
+        .p1 { background: #979797; } .p2 { background: #E3BB76; } .p3 { background: #2271B3; } 
+        .p4 { background: #E27B58; } .p5 { background: #D39C7E; } .p6 { background: #C5AB6E; }
+        .p7 { background: #BBE1E4; color: #333; } .p8 { background: #6081FF; }
     </style>
 </head>
 <body>
 
+    <div id="ui">JOUEURS: <span id="pcount">0</span> | SCORE: <span id="score">0</span></div>
+
+    <div id="overlay">
+        <h1>GAMAFLAK 2</h1>
+        <p>Sélectionnez le mode :</p>
+        <button class="btn" onclick="startGame(1)">1 JOUEUR</button>
+        <button class="btn" onclick="startGame(2)">2 JOUEURS</button>
+        <button class="btn" onclick="startGame(4)">4 JOUEURS</button>
+    </div>
+
     <div id="sun">S</div>
 
-    <!-- Orbites et Planètes -->
-    <div class="orbit mercure"><div class="planet m-body">M</div></div>
-    <div class="orbit venus"><div class="planet v-body">V</div></div>
-    <div class="orbit terre"><div class="planet t-body">T</div></div>
-    <div class="orbit mars"><div class="planet ma-body">M</div></div>
-    <div class="orbit jupiter"><div class="planet j-body">J</div></div>
-    <div class="orbit saturne"><div class="planet s-body">S</div></div>
-    <div class="orbit uranus"><div class="planet u-body">U</div></div>
-    <div class="orbit neptune"><div class="planet n-body">N</div></div>
-
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                .then(() => console.log("Système solaire prêt !"));
+        let score = 0;
+        let audioCtx = null;
+
+        function startGame(num) {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('ui').style.display = 'block';
+            document.getElementById('pcount').innerText = num;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            score = num * 50; 
+            updateScore(0);
+            renderPlanets();
+        }
+
+        function updateScore(pts) {
+            score += pts;
+            document.getElementById('score').innerText = score;
+        }
+
+        function playNote(f) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+            g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.2);
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 1.2);
+        }
+
+        function renderPlanets() {
+            // Liste avec 2 lettres pour différencier
+            const planets = [
+                {t: "Me", c: "p1", d: 85, s: 4, f: 261}, // Mercure
+                {t: "Vé", c: "p2", d: 135, s: 7, f: 293}, // Vénus
+                {t: "Te", c: "p3", d: 185, s: 10, f: 329}, // Terre
+                {t: "Ma", c: "p4", d: 240, s: 14, f: 349}, // Mars
+                {t: "Ju", c: "p5", d: 310, s: 20, f: 392}, // Jupiter
+                {t: "Sa", c: "p6", d: 390, s: 28, f: 440}, // Saturne
+                {t: "Ur", c: "p7", d: 470, s: 38, f: 493}, // Uranus
+                {t: "Ne", c: "p8", d: 550, s: 48, f: 523}  // Neptune
+            ];
+
+            planets.forEach(p => {
+                const orb = document.createElement('div');
+                orb.className = 'orbit';
+                orb.style.width = orb.style.height = p.d + 'px';
+                orb.style.animationDuration = p.s + 's';
+
+                const pl = document.createElement('div');
+                pl.className = `planet ${p.c}`;
+                pl.innerText = p.t;
+                pl.onclick = () => { playNote(p.f); updateScore(10); };
+
+                orb.appendChild(pl);
+                document.body.appendChild(orb);
             });
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
         }
     </script>
 </body>
