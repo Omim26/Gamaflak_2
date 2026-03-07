@@ -1,7 +1,7 @@
 {
-  "short_name": "Gamaflak",
-  "name": "omim26.github",
-  "description": "Game musical of solar system",
+  "short_name": "Gamaflak ",
+  "name": "Gamaflak 2: Stellar Harmony",
+  "description": "Musical game of the solar system",
   "icons": [
     {
       "src": "icon-192.png",
@@ -11,14 +11,14 @@
     {
       "src": "icon-512.png",
       "type": "image/png",
-      "sizes": "512x512",
-       
+      "sizes": "512x512"
     }
   ],
-  "start_url": "/",
+  "start_url": "index.html",
   "background_color": "#000000",
   "display": "standalone",
-  "scope": "/",
+  "scope": "./",
   "theme_color": "#000000",
   "orientation": "portrait"
 }
+
