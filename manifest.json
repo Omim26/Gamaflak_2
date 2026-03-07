@@ -1,7 +1,7 @@
 {
   "short_name": "Gamaflak",
   "name": "omim26.github",
-  "description": "Mon jeu HTML5 ultra fluide",
+  "description": "Game musical of solar system",
   "icons": [
     {
       "src": "icon-192.png",
@@ -12,11 +12,11 @@
       "src": "icon-512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"  
+       
     }
   ],
-  "start_url": "index.html",
-  "background_color": "#ffffff",
+  "start_url": "/",
+  "background_color": "#000000",
   "display": "standalone",
   "scope": "/",
   "theme_color": "#000000",
