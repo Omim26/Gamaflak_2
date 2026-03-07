@@ -3,65 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gamaflak 2 - Stellar Harmony</title>
+    <title>Gamaflak 2 - Online Harmony</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        /* SUPPRESSION RADICALE DE LA PERSPECTIVE */
         * { box-sizing: border-box; perspective: none !important; transform-style: flat !important; }
-        
         body { margin: 0; background: #020205; color: white; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         
-        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-        .btn { background: #6081FF; border: none; color: white; padding: 15px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; width: 120px; }
+        .btn { background: #6081FF; border: none; color: white; padding: 15px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; width: 130px; }
         
         #ui { position: absolute; top: 15px; left: 15px; z-index: 50; display: none; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border-left: 5px solid #ffcc00; }
-        #distance-info { position: absolute; bottom: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 12px; border-radius: 10px; border: 1px solid #444; font-size: 13px; min-width: 140px; }
+        #leaderboard { position: absolute; top: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; font-size: 12px; text-align: right; }
+        #distance-info { position: absolute; bottom: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 12px; border-radius: 10px; border: 1px solid #444; font-size: 13px; min-width: 150px; }
         
-        /* Bouton S (Stop/Home) */
-        #sun { width: 35px; height: 35px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 30px #ff6600; position: absolute; z-index: 60; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 20px; }
+        #sun { width: 40px; height: 40px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 30px #ff6600; position: absolute; z-index: 90; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 22px; }
 
-        /* Conteneur de jeu forcé en 2D */
-        #system-container { position: relative; width: 600px; height: 600px; display: flex; align-items: center; justify-content: center; }
-
-        /* Orbites : Cercles 2D Parfaits */
-        .orbit { 
-            position: absolute; 
-            border: 1px solid rgba(255,255,255,0.15); 
-            border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center;
-            animation: rotate linear infinite; 
-        }
+        .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; animation: rotate linear infinite; pointer-events: none; }
+        .planet { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; cursor: pointer; pointer-events: auto; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.8); z-index: 80; }
         
-        /* Planètes : Positionnées sur le bord supérieur de l'orbite */
-        .planet { 
-            position: absolute; 
-            top: 0; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            width: 34px; height: 34px; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 12px; font-weight: bold; cursor: pointer; pointer-events: auto;
-            box-shadow: inset -4px -4px 8px rgba(0,0,0,0.8);
-        }
-        
-        @keyframes rotate { 
-            from { transform: rotate(0deg); } 
-            to { transform: rotate(360deg); } 
-        }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .online-dot { width: 8px; height: 8px; background: #00ff00; border-radius: 50%; display: inline-block; margin-right: 5px; }
     </style>
 </head>
 <body>
 
     <div id="ui">
-        <b style="color:#ffcc00">MODE: <span id="modeDisp">-</span> | <span id="pcount">-</span> P</b><br>
-        <b>SCORE: <span id="score">0</span></b><br>
+        <b style="color:#ffcc00">MODE: <span id="modeDisp">-</span></b><br>
+        <b>MY SCORE: <span id="score">0</span></b><br>
         <small>BEST: <span id="highscore">0</span></small>
     </div>
 
+    <div id="leaderboard">
+        <div style="color:#ffcc00; margin-bottom:5px;">ONLINE PLAYERS</div>
+        <div><span class="online-dot"></span>Me: <span id="my-live-score">0</span></div>
+        <div id="other-players"></div>
+    </div>
+
     <div id="distance-info">
-        <span id="dist-name" style="color:#ffcc00; font-weight:bold;">Target</span><br>
-        <span id="dist-val">---</span> <small>M km</small>
+        <span id="dist-name" style="color:#ffcc00; font-weight:bold; font-size:15px;">Target</span><br>
+        <span id="dist-val" style="font-size:16px;">---</span> <small>M km</small>
     </div>
 
     <div id="overlay">
@@ -76,16 +57,16 @@
             </div>
         </div>
         <div id="step2" style="display:none;">
-            <p>CHOOSE PLAYERS :</p>
+            <p>CONNECT TO SERVER :</p>
             <div class="btn-grid">
-                <button class="btn" onclick="startGame(1)">1 PLAYER</button>
-                <button class="btn" onclick="startGame(2)">2 PLAYERS</button>
-                <button class="btn" onclick="startGame(4)">4 PLAYERS</button>
+                <button class="btn" onclick="startGame(1)">SOLO</button>
+                <button class="btn" style="background:#25D366" onclick="startGame(2)">ROOM A</button>
+                <button class="btn" style="background:#25D366" onclick="startGame(4)">ROOM B</button>
             </div>
         </div>
     </div>
 
-    <div id="system-container">
+    <div id="system-container" style="position:relative; width:100vw; height:100vh; display:flex; align-items:center; justify-content:center;">
         <div id="sun" onclick="location.reload()">S</div>
     </div>
 
@@ -95,14 +76,14 @@
         document.getElementById('highscore').innerText = highscore;
 
         const planetData = {
-            "Me": {full: "Mercury", d: "57.9", c: "#979797", orb: 90, speed: 5, f: 261, p: 10, g: false, tc: "white"},
-            "Ve": {full: "Venus", d: "108.2", c: "#E3BB76", orb: 140, speed: 8, f: 293, p: 15, g: false, tc: "black"},
-            "Ea": {full: "Earth", d: "149.6", c: "#2271B3", orb: 190, speed: 12, f: 329, p: 20, g: false, tc: "white"},
-            "Ma": {full: "Mars", d: "227.9", c: "#E27B58", orb: 240, speed: 16, f: 349, p: 25, g: false, tc: "white"},
-            "Ju": {full: "Jupiter", d: "778.6", c: "#D39C7E", orb: 320, speed: 22, f: 392, p: 40, g: true, tc: "black"},
-            "Sa": {full: "Saturn", d: "1433", c: "#C5AB6E", orb: 400, speed: 30, f: 440, p: 50, g: true, tc: "black"},
-            "Ur": {full: "Uranus", d: "2872", c: "#BBE1E4", orb: 480, speed: 40, f: 493, p: 60, g: true, tc: "black"},
-            "Ne": {full: "Neptune", d: "4495", c: "#6081FF", orb: 560, speed: 50, f: 523, p: 70, g: true, tc: "white"}
+            "Me": {full: "Mercury", d: "57.9", c: "#979797", orb: 95, speed: 5, f: 261, p: 10, g: false, tc: "white"},
+            "Ve": {full: "Venus", d: "108.2", c: "#E3BB76", orb: 145, speed: 8, f: 293, p: 15, g: false, tc: "black"},
+            "Ea": {full: "Earth", d: "149.6", c: "#2271B3", orb: 195, speed: 12, f: 329, p: 20, g: false, tc: "white"},
+            "Ma": {full: "Mars", d: "227.9", c: "#E27B58", orb: 245, speed: 16, f: 349, p: 25, g: false, tc: "white"},
+            "Ju": {full: "Jupiter", d: "778.6", c: "#D39C7E", orb: 325, speed: 22, f: 392, p: 40, g: true, tc: "black"},
+            "Sa": {full: "Saturn", d: "1433", c: "#C5AB6E", orb: 405, speed: 30, f: 440, p: 50, g: true, tc: "black"},
+            "Ur": {full: "Uranus", d: "2872", c: "#BBE1E4", orb: 485, speed: 40, f: 493, p: 60, g: true, tc: "black"},
+            "Ne": {full: "Neptune", d: "4495", c: "#6081FF", orb: 565, speed: 50, f: 523, p: 70, g: true, tc: "white"}
         };
 
         function nextStep(mode, mult) {
@@ -111,19 +92,22 @@
             document.getElementById('step2').style.display = 'block';
         }
 
-        function startGame(players) {
+        function startGame(type) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             document.getElementById('overlay').style.display = 'none';
             document.getElementById('ui').style.display = 'block';
+            document.getElementById('leaderboard').style.display = 'block';
             document.getElementById('distance-info').style.display = 'block';
             document.getElementById('modeDisp').innerText = selMode;
-            document.getElementById('pcount').innerText = players;
+            
+            if(type > 1) simulateOtherPlayers();
             renderSystem();
         }
 
         function updateScore(pts, isGiant, key) {
             score += Math.round(pts * multiplier);
             document.getElementById('score').innerText = score;
+            document.getElementById('my-live-score').innerText = score;
             const p = planetData[key];
             document.getElementById('dist-name').innerText = p.full;
             document.getElementById('dist-val').innerText = p.d;
@@ -135,14 +119,31 @@
             }
         }
 
+        function simulateOtherPlayers() {
+            const others = document.getElementById('other-players');
+            const names = ["Astro_99", "StarBoy", "Nova"];
+            names.forEach(n => {
+                let s = Math.floor(Math.random() * 100);
+                let div = document.createElement('div');
+                div.id = "player-" + n;
+                div.innerHTML = `<span class="online-dot" style="background:#777"></span>${n}: <span>${s}</span>`;
+                others.appendChild(div);
+                // Simulation de score qui monte
+                setInterval(() => {
+                    s += Math.floor(Math.random() * 20);
+                    div.querySelector('span:last-child').innerText = s;
+                }, 3000);
+            });
+        }
+
         function playNote(f) {
             if (!audioCtx) return;
             const o = audioCtx.createOscillator(), g = audioCtx.createGain();
             o.type = 'triangle';
             o.frequency.setValueAtTime(f, audioCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.2);
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1);
             o.connect(g); g.connect(audioCtx.destination);
-            o.start(); o.stop(audioCtx.currentTime + 1.2);
+            o.start(); o.stop(audioCtx.currentTime + 1);
         }
 
         function renderSystem() {
@@ -153,19 +154,13 @@
                 orb.className = 'orbit';
                 orb.style.width = orb.style.height = p.orb + 'px';
                 orb.style.animationDuration = p.speed + 's';
-                orb.style.borderColor = p.c + '55'; // Plus visible
-                
+                orb.style.borderColor = p.c + '66';
                 const pl = document.createElement('div');
-                pl.className = `planet`;
+                pl.className = 'planet';
                 pl.style.backgroundColor = p.c;
                 pl.style.color = p.tc;
                 pl.innerText = key;
-                pl.onclick = (e) => { 
-                    e.stopPropagation(); 
-                    playNote(p.f); 
-                    updateScore(p.p, p.g, key); 
-                };
-                
+                pl.onclick = (e) => { e.stopPropagation(); playNote(p.f); updateScore(p.p, p.g, key); };
                 orb.appendChild(pl);
                 container.appendChild(orb);
             });
