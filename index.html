@@ -6,23 +6,24 @@
     <title>Gamaflak 2 - Stellar Harmony</title>
     <link rel="manifest" href="manifest.json">
     <style>
+        /* RESET TOTAL PERSPECTIVE */
+        * { box-sizing: border-box; transform-style: flat !important; perspective: none !important; }
+        
         body { margin: 0; background: #020205; color: white; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
         
-        /* Correction Perspective : On assure un plan 2D plat */
-        #universe { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
-
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-        .btn { background: #6081FF; border: none; color: white; padding: 18px; border-radius: 35px; font-size: 16px; font-weight: bold; cursor: pointer; width: 130px; }
+        .btn { background: #6081FF; border: none; color: white; padding: 15px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; width: 120px; transition: 0.2s; }
+        .btn:active { background: #ffcc00; color: black; }
         
         #ui { position: absolute; top: 15px; left: 15px; z-index: 50; display: none; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border-left: 5px solid #ffcc00; }
-        #distance-info { position: absolute; bottom: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.7); padding: 12px; border-radius: 10px; border: 1px solid #444; font-size: 13px; min-width: 140px; }
+        #distance-info { position: absolute; bottom: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 12px; border-radius: 10px; border: 1px solid #444; font-size: 13px; min-width: 140px; }
         
-        /* Sun "S" Button */
-        #sun { width: 35px; height: 35px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 30px #ff6600; position: absolute; z-index: 60; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 18px; border: 2px solid rgba(255,255,255,0.3); }
+        /* Soleil - Bouton S */
+        #sun { width: 35px; height: 35px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 30px #ff6600; position: absolute; z-index: 60; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 20px; }
 
-        /* Orbites Circulaires Parfaites (Pas de perspective) */
-        .orbit { position: absolute; border: 1.2px solid; border-radius: 50%; animation: rotate linear infinite; pointer-events: none; transform-origin: center; }
+        /* Orbites : Cercles Parfaits */
+        .orbit { position: absolute; border: 1.2px solid; border-radius: 50%; animation: rotate linear infinite; pointer-events: none; transform: translate(0, 0) !important; }
         
         .planet { 
             position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); 
@@ -31,93 +32,92 @@
             box-shadow: inset -5px -5px 12px rgba(0,0,0,0.8);
         }
         
-        #new-record { color: #ffcc00; font-weight: bold; display: none; animation: blink 0.5s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .asteroid { position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; opacity: 0.3; }
     </style>
 </head>
 <body>
 
-    <div id="universe">
-        <div id="ui">
-            <b style="color:#ffcc00">MODE: <span id="modeDisp">-</span></b><br>
-            <b>SCORE: <span id="score">0</span></b><br>
-            <small>BEST: <span id="highscore">0</span></small><br>
-            <div id="new-record">NEW RECORD!</div>
-        </div>
-
-        <div id="distance-info">
-            <span id="dist-name" style="color:#ffcc00; font-weight:bold; font-size:15px;">Target</span><br>
-            <span id="dist-val" style="color:white; font-size:16px;">---</span> <small>M km</small>
-        </div>
-
-        <div id="overlay">
-            <h1 style="letter-spacing: 5px;">GAMAFLAK 2</h1>
-            <p>CHOOSE FREQUENCY :</p>
-            <div class="btn-grid">
-                <button class="btn" onclick="selectMode('DO', 261.63, 1)">C / DO</button>
-                <button class="btn" onclick="selectMode('MI', 329.63, 1.5)">E / MI</button>
-                <button class="btn" onclick="selectMode('FA', 349.23, 2)">F / FA</button>
-                <button class="btn" onclick="selectMode('SOL', 392.00, 2.5)">G / SOL</button>
-            </div>
-        </div>
-
-        <div id="sun" onclick="goHome()">S</div>
-        <div id="system-container"></div>
+    <div id="ui">
+        <b style="color:#ffcc00">MODE: <span id="modeDisp">-</span> | <span id="playerDisp">-</span> P</b><br>
+        <b>SCORE: <span id="score">0</span></b><br>
+        <small>BEST: <span id="highscore">0</span></small>
     </div>
 
+    <div id="distance-info">
+        <span id="dist-name" style="color:#ffcc00; font-weight:bold;">Target</span><br>
+        <span id="dist-val">---</span> <small>M km</small>
+    </div>
+
+    <!-- Menu Principal -->
+    <div id="overlay">
+        <h1 id="menu-title">GAMAFLAK 2</h1>
+        <div id="step1">
+            <p>CHOOSE FREQUENCY :</p>
+            <div class="btn-grid">
+                <button class="btn" onclick="nextStep('DO', 1)">C / DO</button>
+                <button class="btn" onclick="nextStep('MI', 1.5)">E / MI</button>
+                <button class="btn" onclick="nextStep('FA', 2)">F / FA</button>
+                <button class="btn" onclick="nextStep('SOL', 2.5)">G / SOL</button>
+            </div>
+        </div>
+        <div id="step2" style="display:none;">
+            <p>CHOOSE PLAYERS :</p>
+            <div class="btn-grid">
+                <button class="btn" onclick="startGame(1)">1 PLAYER</button>
+                <button class="btn" onclick="startGame(2)">2 PLAYERS</button>
+                <button class="btn" onclick="startGame(4)">4 PLAYERS</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sun" onclick="goHome()">S</div>
+    <div id="system-container"></div>
+
     <script>
-        let score = 0, audioCtx = null, multiplier = 1;
+        let score = 0, audioCtx = null, multiplier = 1, selMode = "";
         let highscore = parseInt(localStorage.getItem('gamaflak_record')) || 0;
-        let recordBeaten = false;
         document.getElementById('highscore').innerText = highscore;
 
         const planetData = {
             "Me": {full: "Mercury", d: "57.9", c: "#979797", orb: 85, speed: 4, f: 261, p: 10, g: false, tc: "white"},
-            "Ve": {full: "Venus", d: "108.2", c: "#E3BB76", orb: 130, speed: 7, f: 293, p: 15, g: false, tc: "black"},
-            "Ea": {full: "Earth", d: "149.6", c: "#2271B3", orb: 180, speed: 10, f: 329, p: 20, g: false, tc: "white"},
-            "Ma": {full: "Mars", d: "227.9", c: "#E27B58", orb: 230, speed: 13, f: 349, p: 25, g: false, tc: "white"},
-            "Ju": {full: "Jupiter", d: "778.6", c: "#D39C7E", orb: 310, speed: 20, f: 392, p: 40, g: true, tc: "black"},
-            "Sa": {full: "Saturn", d: "1433", c: "#C5AB6E", orb: 390, speed: 25, f: 440, p: 50, g: true, tc: "black"},
-            "Ur": {full: "Uranus", d: "2872", c: "#BBE1E4", orb: 470, speed: 35, f: 493, p: 60, g: true, tc: "black"},
-            "Ne": {full: "Neptune", d: "4495", c: "#6081FF", orb: 550, speed: 45, f: 523, p: 70, g: true, tc: "white"}
+            "Ve": {full: "Venus", d: "108.2", c: "#E3BB76", orb: 135, speed: 7, f: 293, p: 15, g: false, tc: "black"},
+            "Ea": {full: "Earth", d: "149.6", c: "#2271B3", orb: 185, speed: 10, f: 329, p: 20, g: false, tc: "white"},
+            "Ma": {full: "Mars", d: "227.9", c: "#E27B58", orb: 235, speed: 13, f: 349, p: 25, g: false, tc: "white"},
+            "Ju": {full: "Jupiter", d: "778.6", c: "#D39C7E", orb: 315, speed: 20, f: 392, p: 40, g: true, tc: "black"},
+            "Sa": {full: "Saturn", d: "1433", c: "#C5AB6E", orb: 395, speed: 25, f: 440, p: 50, g: true, tc: "black"},
+            "Ur": {full: "Uranus", d: "2872", c: "#BBE1E4", orb: 475, speed: 35, f: 493, p: 60, g: true, tc: "black"},
+            "Ne": {full: "Neptune", d: "4495", c: "#6081FF", orb: 555, speed: 45, f: 523, p: 70, g: true, tc: "white"}
         };
 
-        function selectMode(name, freq, mult) {
-            multiplier = mult;
+        function nextStep(mode, mult) {
+            selMode = mode; multiplier = mult;
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+        }
+
+        function startGame(players) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             document.getElementById('overlay').style.display = 'none';
             document.getElementById('ui').style.display = 'block';
             document.getElementById('distance-info').style.display = 'block';
-            document.getElementById('modeDisp').innerText = name;
+            document.getElementById('modeDisp').innerText = selMode;
+            document.getElementById('playerDisp').innerText = players;
             renderSystem();
         }
 
         function goHome() {
-            document.getElementById('system-container').innerHTML = "";
-            document.getElementById('overlay').style.display = 'flex';
-            document.getElementById('ui').style.display = 'none';
-            document.getElementById('distance-info').style.display = 'none';
-            score = 0; recordBeaten = false;
-            document.getElementById('new-record').style.display = 'none';
+            location.reload(); // Méthode la plus sûre pour réinitialiser proprement
         }
 
         function updateScore(pts, isGiant, key) {
             score += Math.round(pts * multiplier);
             document.getElementById('score').innerText = score;
-            
-            // Affichage NOM COMPLET et DISTANCE
             const p = planetData[key];
             document.getElementById('dist-name').innerText = p.full;
             document.getElementById('dist-val').innerText = p.d;
-
             if (isGiant && navigator.vibrate) navigator.vibrate(30);
             if(score > highscore) {
-                if(!recordBeaten && highscore > 0) {
-                    document.getElementById('new-record').style.display = 'block';
-                    recordBeaten = true;
-                }
                 highscore = score;
                 localStorage.setItem('gamaflak_record', highscore);
                 document.getElementById('highscore').innerText = highscore;
@@ -143,37 +143,16 @@
                 orb.style.width = orb.style.height = p.orb + 'px';
                 orb.style.animationDuration = p.speed + 's';
                 orb.style.borderColor = p.c + '44';
-                
                 const pl = document.createElement('div');
                 pl.className = `planet`;
                 pl.style.backgroundColor = p.c;
                 pl.style.color = p.tc;
                 pl.innerText = key;
-                pl.onclick = (e) => { 
-                    e.stopPropagation(); 
-                    playSpaceNote(p.f); 
-                    updateScore(p.p, p.g, key); 
-                };
-                
+                pl.onclick = (e) => { e.stopPropagation(); playSpaceNote(p.f); updateScore(p.p, p.g, key); };
                 orb.appendChild(pl);
                 container.appendChild(orb);
             });
-            
-            // Asteroid Belt
-            const belt = document.createElement('div');
-            belt.className = 'orbit'; belt.style.width = belt.style.height = '270px';
-            belt.style.animationDuration = '22s'; belt.style.border = 'none';
-            for(let i=0; i<40; i++) {
-                const a = document.createElement('div');
-                a.className = 'asteroid';
-                let ang = (i/40) * Math.PI * 2;
-                a.style.left = (Math.cos(ang)*135 + 135) + 'px';
-                a.style.top = (Math.sin(ang)*135 + 135) + 'px';
-                belt.appendChild(a);
-            }
-            container.appendChild(belt);
         }
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     </script>
 </body>
 </html>
