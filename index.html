@@ -7,85 +7,91 @@
     <link rel="manifest" href="manifest.json">
     <style>
         body { margin: 0; background: #020205; color: white; font-family: 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
+        
+        /* Correction Perspective : On assure un plan 2D plat */
+        #universe { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-        .btn { background: #6081FF; border: none; color: white; padding: 18px; border-radius: 35px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 20px rgba(96,129,255,0.4); transition: 0.3s; width: 130px; }
-        .btn-share { background: #25D366; width: 180px; margin-top: 15px; }
+        .btn { background: #6081FF; border: none; color: white; padding: 18px; border-radius: 35px; font-size: 16px; font-weight: bold; cursor: pointer; width: 130px; }
         
         #ui { position: absolute; top: 15px; left: 15px; z-index: 50; display: none; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border-left: 5px solid #ffcc00; }
-        #distance-info { position: absolute; bottom: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; border: 1px solid #444; font-size: 12px; color: #aaa; text-align: right; pointer-events: none; }
+        #distance-info { position: absolute; bottom: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.7); padding: 12px; border-radius: 10px; border: 1px solid #444; font-size: 13px; min-width: 140px; }
         
-        /* Sun as Home Button */
-        #sun { width: 35px; height: 35px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 40px #ff6600; position: absolute; z-index: 60; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 10px; transition: 0.2s; }
-        #sun:active { transform: scale(0.8); }
+        /* Sun "S" Button */
+        #sun { width: 35px; height: 35px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 30px #ff6600; position: absolute; z-index: 60; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 18px; border: 2px solid rgba(255,255,255,0.3); }
 
-        .orbit { position: absolute; border: 1.2px solid; border-radius: 50%; animation: rotate linear infinite; pointer-events: none; }
+        /* Orbites Circulaires Parfaites (Pas de perspective) */
+        .orbit { position: absolute; border: 1.2px solid; border-radius: 50%; animation: rotate linear infinite; pointer-events: none; transform-origin: center; }
+        
         .planet { 
-            position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 36px; height: 36px; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer; pointer-events: auto;
-            box-shadow: inset -5px -5px 12px rgba(0,0,0,0.8); text-shadow: 0px 0px 2px rgba(0,0,0,0.8);
+            position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); 
+            width: 36px; height: 36px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; cursor: pointer; pointer-events: auto;
+            box-shadow: inset -5px -5px 12px rgba(0,0,0,0.8);
         }
         
-        #new-record { color: #ffcc00; font-weight: bold; display: none; animation: blink 0.5s infinite; font-size: 14px; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+        #new-record { color: #ffcc00; font-weight: bold; display: none; animation: blink 0.5s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .asteroid { position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; opacity: 0.3; }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <b style="color:#ffcc00">MODE: <span id="modeDisp">-</span></b><br>
-        <b>SCORE: <span id="score">0</span></b><br>
-        <small>BEST: <span id="highscore">0</span></small><br>
-        <div id="new-record">★ NEW RECORD! ★</div>
-        <button class="btn btn-share" style="padding: 8px; font-size: 11px; height: auto;" onclick="shareScore()">SHARE SCORE</button>
-    </div>
-
-    <div id="distance-info">
-        <span id="dist-name" style="color:white; font-weight:bold;">Tap a planet</span><br>
-        <span id="dist-val">---</span> million km
-    </div>
-
-    <div id="overlay">
-        <h1 style="letter-spacing: 5px;">GAMAFLAK 2</h1>
-        <p>CHOOSE FREQUENCY :</p>
-        <div class="btn-grid">
-            <button class="btn" onclick="selectMode('DO', 261.63, 1)">C / DO</button>
-            <button class="btn" onclick="selectMode('MI', 329.63, 1.5)">E / MI</button>
-            <button class="btn" onclick="selectMode('FA', 349.23, 2)">F / FA</button>
-            <button class="btn" onclick="selectMode('SOL', 392.00, 2.5)">G / SOL</button>
+    <div id="universe">
+        <div id="ui">
+            <b style="color:#ffcc00">MODE: <span id="modeDisp">-</span></b><br>
+            <b>SCORE: <span id="score">0</span></b><br>
+            <small>BEST: <span id="highscore">0</span></small><br>
+            <div id="new-record">NEW RECORD!</div>
         </div>
+
+        <div id="distance-info">
+            <span id="dist-name" style="color:#ffcc00; font-weight:bold; font-size:15px;">Target</span><br>
+            <span id="dist-val" style="color:white; font-size:16px;">---</span> <small>M km</small>
+        </div>
+
+        <div id="overlay">
+            <h1 style="letter-spacing: 5px;">GAMAFLAK 2</h1>
+            <p>CHOOSE FREQUENCY :</p>
+            <div class="btn-grid">
+                <button class="btn" onclick="selectMode('DO', 261.63, 1)">C / DO</button>
+                <button class="btn" onclick="selectMode('MI', 329.63, 1.5)">E / MI</button>
+                <button class="btn" onclick="selectMode('FA', 349.23, 2)">F / FA</button>
+                <button class="btn" onclick="selectMode('SOL', 392.00, 2.5)">G / SOL</button>
+            </div>
+        </div>
+
+        <div id="sun" onclick="goHome()">S</div>
+        <div id="system-container"></div>
     </div>
-
-    <!-- Sun = Home Button -->
-    <div id="sun" onclick="goHome()">HOME</div>
-
-    <div id="system-container"></div>
 
     <script>
-        let score = 0, audioCtx = null, multiplier = 1, currentMode = "";
+        let score = 0, audioCtx = null, multiplier = 1;
         let highscore = parseInt(localStorage.getItem('gamaflak_record')) || 0;
         let recordBeaten = false;
         document.getElementById('highscore').innerText = highscore;
 
-        function selectMode(name, freq, mult) {
-            multiplier = mult; currentMode = name;
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.5);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 1.5);
+        const planetData = {
+            "Me": {full: "Mercury", d: "57.9", c: "#979797", orb: 85, speed: 4, f: 261, p: 10, g: false, tc: "white"},
+            "Ve": {full: "Venus", d: "108.2", c: "#E3BB76", orb: 130, speed: 7, f: 293, p: 15, g: false, tc: "black"},
+            "Ea": {full: "Earth", d: "149.6", c: "#2271B3", orb: 180, speed: 10, f: 329, p: 20, g: false, tc: "white"},
+            "Ma": {full: "Mars", d: "227.9", c: "#E27B58", orb: 230, speed: 13, f: 349, p: 25, g: false, tc: "white"},
+            "Ju": {full: "Jupiter", d: "778.6", c: "#D39C7E", orb: 310, speed: 20, f: 392, p: 40, g: true, tc: "black"},
+            "Sa": {full: "Saturn", d: "1433", c: "#C5AB6E", orb: 390, speed: 25, f: 440, p: 50, g: true, tc: "black"},
+            "Ur": {full: "Uranus", d: "2872", c: "#BBE1E4", orb: 470, speed: 35, f: 493, p: 60, g: true, tc: "black"},
+            "Ne": {full: "Neptune", d: "4495", c: "#6081FF", orb: 550, speed: 45, f: 523, p: 70, g: true, tc: "white"}
+        };
 
-            setTimeout(() => {
-                document.getElementById('overlay').style.display = 'none';
-                document.getElementById('ui').style.display = 'block';
-                document.getElementById('distance-info').style.display = 'block';
-                document.getElementById('modeDisp').innerText = name;
-                renderSystem();
-            }, 300);
+        function selectMode(name, freq, mult) {
+            multiplier = mult;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('ui').style.display = 'block';
+            document.getElementById('distance-info').style.display = 'block';
+            document.getElementById('modeDisp').innerText = name;
+            renderSystem();
         }
 
         function goHome() {
@@ -97,11 +103,14 @@
             document.getElementById('new-record').style.display = 'none';
         }
 
-        function updateScore(pts, isGiant, pName, pDist) {
+        function updateScore(pts, isGiant, key) {
             score += Math.round(pts * multiplier);
             document.getElementById('score').innerText = score;
-            document.getElementById('dist-name').innerText = pName;
-            document.getElementById('dist-val').innerText = pDist;
+            
+            // Affichage NOM COMPLET et DISTANCE
+            const p = planetData[key];
+            document.getElementById('dist-name').innerText = p.full;
+            document.getElementById('dist-val').innerText = p.d;
 
             if (isGiant && navigator.vibrate) navigator.vibrate(30);
             if(score > highscore) {
@@ -115,21 +124,11 @@
             }
         }
 
-        async function shareScore() {
-            const shareData = {
-                title: 'Gamaflak 2',
-                text: `I just hit a NEW RECORD of ${score} points in Stellar Harmony!`,
-                url: window.location.href
-            };
-            try { if (navigator.share) await navigator.share(shareData); } catch (err) {}
-        }
-
         function playSpaceNote(f) {
             if (!audioCtx) return;
             const o = audioCtx.createOscillator(), g = audioCtx.createGain();
             o.type = 'triangle';
             o.frequency.setValueAtTime(f, audioCtx.currentTime);
-            g.gain.setValueAtTime(0.2, audioCtx.currentTime);
             g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.2);
             o.connect(g); g.connect(audioCtx.destination);
             o.start(); o.stop(audioCtx.currentTime + 1.2);
@@ -137,33 +136,23 @@
 
         function renderSystem() {
             const container = document.getElementById('system-container');
-            const planets = [
-                {t:"Me", c:"#979797", d:85, s:4, f:261, p:10, g:false, dist:"57.9", tc:"white"},
-                {t:"Ve", c:"#E3BB76", d:130, s:7, f:293, p:15, g:false, dist:"108.2", tc:"black"},
-                {t:"Ea", c:"#2271B3", d:180, s:10, f:329, p:20, g:false, dist:"149.6", tc:"white"},
-                {t:"Ma", c:"#E27B58", d:230, s:13, f:349, p:25, g:false, dist:"227.9", tc:"white"},
-                {t:"Ju", c:"#D39C7E", d:310, s:20, f:392, p:40, g:true, dist:"778.6", tc:"black"},
-                {t:"Sa", c:"#C5AB6E", d:390, s:25, f:440, p:50, g:true, dist:"1433", tc:"black"},
-                {t:"Ur", c:"#BBE1E4", d:470, s:35, f:493, p:60, g:true, dist:"2872", tc:"black"},
-                {t:"Ne", c:"#6081FF", d:550, s:45, f:523, p:70, g:true, dist:"4495", tc:"white"}
-            ];
-            
-            planets.forEach(p => {
+            Object.keys(planetData).forEach(key => {
+                const p = planetData[key];
                 const orb = document.createElement('div');
                 orb.className = 'orbit';
-                orb.style.width = orb.style.height = p.d + 'px';
-                orb.style.animationDuration = p.s + 's';
+                orb.style.width = orb.style.height = p.orb + 'px';
+                orb.style.animationDuration = p.speed + 's';
                 orb.style.borderColor = p.c + '44';
                 
                 const pl = document.createElement('div');
                 pl.className = `planet`;
                 pl.style.backgroundColor = p.c;
-                pl.style.color = p.tc; // Custom text color for readability
-                pl.innerText = p.t;
+                pl.style.color = p.tc;
+                pl.innerText = key;
                 pl.onclick = (e) => { 
                     e.stopPropagation(); 
                     playSpaceNote(p.f); 
-                    updateScore(p.p, p.g, p.t === "Ea" ? "Earth" : p.t, p.dist); 
+                    updateScore(p.p, p.g, key); 
                 };
                 
                 orb.appendChild(pl);
@@ -174,10 +163,10 @@
             const belt = document.createElement('div');
             belt.className = 'orbit'; belt.style.width = belt.style.height = '270px';
             belt.style.animationDuration = '22s'; belt.style.border = 'none';
-            for(let i=0; i<50; i++) {
+            for(let i=0; i<40; i++) {
                 const a = document.createElement('div');
                 a.className = 'asteroid';
-                let ang = (i/50) * Math.PI * 2;
+                let ang = (i/40) * Math.PI * 2;
                 a.style.left = (Math.cos(ang)*135 + 135) + 'px';
                 a.style.top = (Math.sin(ang)*135 + 135) + 'px';
                 belt.appendChild(a);
