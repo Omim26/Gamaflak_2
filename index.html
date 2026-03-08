@@ -3,164 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gamaflak - Système Solaire Complet</title>
+    <title>Gamaflak | Space Battle</title>
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; background: #050510; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
-        canvas { display: block; }
-        #ui { position: absolute; top: 20px; left: 20px; pointer-events: none; }
-        #share-btn { 
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            padding: 15px 30px; background: #4A90E2; border: none; border-radius: 25px;
-            color: white; font-weight: bold; font-size: 16px; cursor: pointer; pointer-events: auto;
-        }
+        * { box-sizing: border-box; perspective: none !important; }
+        body { margin: 0; background: #020205; color: white; font-family: 'Orbitron', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
+        
+        /* UI & Overlay */
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .btn { background: #6081FF; border: none; color: white; padding: 15px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; width: 140px; font-family: 'Orbitron', sans-serif; transition: 0.2s; }
+        .btn:active { background: #ffcc00; color: black; transform: scale(0.95); }
+        input { background: rgba(255,255,255,0.1); border: 2px solid #6081FF; border-radius: 20px; padding: 12px; color: white; margin-bottom: 15px; text-align: center; width: 250px; font-size: 16px; outline: none; font-family: 'Orbitron', sans-serif; }
+
+        #ui { position: absolute; top: 15px; left: 15px; z-index: 50; display: none; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border-left: 5px solid #ffcc00; }
+        #timer-box { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 24px; color: #ffcc00; font-weight: bold; z-index: 50; display: none; }
+        
+        #leaderboard { position: absolute; top: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 15px; min-width: 180px; border: 1px solid #444; }
+        .leader-item { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; padding: 4px 8px; border-radius: 5px; }
+        .me-highlight { background: rgba(255, 204, 0, 0.2); border: 1px solid #ffcc00; color: #ffcc00; }
+
+        /* Jeu & Planètes */
+        #system-container { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        #sun { width: 50px; height: 50px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 30px #ff6600; z-index: 90; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; }
+        .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; animation: rotate linear infinite; pointer-events: none; }
+        .planet { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 35px; height: 35px; border-radius: 50%; cursor: pointer; pointer-events: auto; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 9px; text-shadow: 1px 1px 2px black; }
+        
+        /* Particules */
+        .particle { position: absolute; width: 5px; height: 5px; border-radius: 50%; pointer-events: none; z-index: 100; transition: transform 0.6s ease-out, opacity 0.6s ease-out; }
+
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div id="ui">
-    <h1 style="margin:0; font-size: 24px;">Gamaflak</h1>
-    <p>Score: <span id="score">0</span></p>
-</div>
+    <div id="timer-box">60s</div>
 
-<button id="share-btn" onclick="shareGame()">Partager mon score</button>
+    <div id="ui">
+        <b id="my-name-display" style="color:#ffcc00; text-transform: uppercase;">PLAYER</b><br>
+        <small>MODE: <span id="modeDisp">-</span></small><br>
+        <b>SCORE: <span id="score">0</span></b><br>
+        <button onclick="shareGame()" style="background:#25D366; border:none; color:white; border-radius:10px; padding:5px 10px; margin-top:5px; font-family:'Orbitron'; font-size:10px; cursor:pointer;">INVITER</button>
+    </div>
 
-<!-- Éléments Audio (remplace les sources par tes fichiers) -->
-<audio id="bgMusic" loop>
-    <source src="musique.mp3" type="audio/mpeg">
-</audio>
+    <div id="leaderboard">
+        <div style="color:#ffcc00; margin-bottom:10px; font-size: 11px; text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px;">CLASSEMENT LIVE</div>
+        <div id="player-list"></div>
+    </div>
 
-<canvas id="gameCanvas"></canvas>
+    <div id="overlay">
+        <h1 style="letter-spacing: 5px; color:#6081FF;">GAMAFLAK</h1>
+        
+        <div id="step-note">
+            <p>1. CHOISIR LA FRÉQUENCE</p>
+            <div class="btn-grid">
+                <button class="btn" onclick="setNote('DO', 1)">C / DO</button>
+                <button class="btn" onclick="setNote('MI', 1.5)">E / MI</button>
+                <button class="btn" onclick="setNote('FA', 2)">F / FA</button>
+                <button class="btn" onclick="setNote('SOL', 2.5)">G / SOL</button>
+            </div>
+        </div>
 
-<script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const bgMusic = document.getElementById('bgMusic');
-    let score = 1250;
-    let musicStarted = false;
+        <div id="step-count" style="display:none;">
+            <p>2. NOMBRE DE JOUEURS ?</p>
+            <div class="btn-grid">
+                <button class="btn" onclick="setPlayerCount(1)">1 JOUEUR</button>
+                <button class="btn" onclick="setPlayerCount(2)">2 JOUEURS</button>
+                <button class="btn" onclick="setPlayerCount(4)">4 JOUEURS</button>
+            </div>
+        </div>
 
-    // Liste complète des 8 planètes
-    const planets = [
-        { name: "Mercure", dist: 50, size: 3, speed: 0.04, color: "#A5A5A5" },
-        { name: "Vénus", dist: 80, size: 6, speed: 0.015, color: "#E3BB76" },
-        { name: "Terre", dist: 110, size: 7, speed: 0.01, color: "#2271B3" },
-        { name: "Mars", dist: 140, size: 5, speed: 0.008, color: "#E27B58" },
-        { name: "Jupiter", dist: 210, size: 16, speed: 0.004, color: "#D39C7E" },
-        { name: "Saturne", dist: 280, size: 14, speed: 0.002, color: "#F4D47A", hasRings: true },
-        { name: "Uranus", dist: 340, size: 10, speed: 0.0015, color: "#BBE1E4" },
-        { name: "Neptune", dist: 390, size: 10, speed: 0.001, color: "#6081FF" }
-    ];
+        <div id="step-names" style="display:none;">
+            <p id="name-prompt">TON NOM</p>
+            <input type="text" id="nameInput" placeholder="Pseudo..." maxlength="10">
+            <br>
+            <button class="btn" id="nameNextBtn" style="width:220px; background:#ffcc00; color:black;" onclick="nextName()">CONTINUER</button>
+        </div>
+    </div>
 
-    // Génération de la ceinture d'astéroïdes (entre Mars et Jupiter)
-    const asteroids = [];
-    for(let i = 0; i < 120; i++) {
-        asteroids.push({
-            dist: 165 + Math.random() * 25,
-            angle: Math.random() * Math.PI * 2,
-            size: Math.random() * 1.2,
-            speed: 0.004 + Math.random() * 0.002
-        });
-    }
+    <div id="system-container">
+        <div id="sun" onclick="location.reload()">S</div>
+    </div>
 
-    let angles = planets.map(() => Math.random() * Math.PI * 2);
+    <script src="https://ably.com"></script>
+    <script>
+        let score = 0, audioCtx = null, multiplier = 1, selMode = "";
+        let targetPlayers = 1, currentNameIndex = 1, playerNames = [], myPrimaryName = "";
+        let playersScores = {}, ably, channel, gameActive = false, timeLeft = 60;
 
-    // Gestion de l'audio au premier clic (obligatoire sur mobile/navigateur)
-    window.addEventListener('pointerdown', () => {
-        if (!musicStarted && bgMusic.src) {
-            bgMusic.play().catch(() => {});
-            musicStarted = true;
+        const ABLY_KEY = 'fLnNJA.dOy3HQ:GLmXxSIjEKpZwMm4n54ZE91hfEYMd1NS3veSJv9-n_0';
+
+        function setNote(mode, mult) {
+            selMode = mode; multiplier = mult;
+            document.getElementById('modeDisp').innerText = mode;
+            document.getElementById('step-note').style.display = 'none';
+            document.getElementById('step-count').style.display = 'block';
         }
-    });
 
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
+        function setPlayerCount(count) {
+            targetPlayers = count;
+            document.getElementById('step-count').style.display = 'none';
+            document.getElementById('step-names').style.display = 'block';
+            updateNamePrompt();
+        }
 
-    function draw() {
-        ctx.fillStyle = "#050510";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        function updateNamePrompt() {
+            document.getElementById('name-prompt').innerText = `NOM DU JOUEUR ${currentNameIndex}`;
+            document.getElementById('nameInput').value = "";
+            if(currentNameIndex === targetPlayers) document.getElementById('nameNextBtn').innerText = "LANCER LE JEU";
+        }
 
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-
-        // ZOOM DYNAMIQUE (ajusté pour 8 planètes + ceinture)
-        const maxDist = planets[planets.length - 1].dist + 30;
-        const scale = Math.min(canvas.width, canvas.height) / (maxDist * 2.2);
-
-        ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.scale(scale, scale);
-
-        // 1. Soleil
-        ctx.beginPath();
-        ctx.arc(0, 0, 25, 0, Math.PI * 2);
-        ctx.fillStyle = "#FFD700";
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = "#FFD700";
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // 2. Ceinture d'astéroïdes
-        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-        asteroids.forEach(as => {
-            as.angle += as.speed;
-            const ax = Math.cos(as.angle) * as.dist;
-            const ay = Math.sin(as.angle) * as.dist;
-            ctx.fillRect(ax, ay, as.size, as.size);
-        });
-
-        // 3. Planètes
-        planets.forEach((p, i) => {
-            angles[i] += p.speed;
-            const x = Math.cos(angles[i]) * p.dist;
-            const y = Math.sin(angles[i]) * p.dist;
-
-            // Orbite
-            ctx.beginPath();
-            ctx.arc(0, 0, p.dist, 0, Math.PI * 2);
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
-            ctx.lineWidth = 1 / scale;
-            ctx.stroke();
-
-            // Anneaux de Saturne (corrigés visuellement)
-            if (p.hasRings) {
-                ctx.beginPath();
-                ctx.ellipse(x, y, p.size * 2.2, p.size * 0.8, Math.PI / 8, 0, Math.PI * 2);
-                ctx.strokeStyle = "rgba(210, 180, 140, 0.5)";
-                ctx.lineWidth = 3;
-                ctx.stroke();
+        function nextName() {
+            let n = document.getElementById('nameInput').value.trim();
+            let finalName = n || `P${currentNameIndex}`;
+            playerNames.push(finalName);
+            if(currentNameIndex === 1) {
+                myPrimaryName = finalName;
+                document.getElementById('my-name-display').innerText = finalName;
             }
+            if(currentNameIndex < targetPlayers) {
+                currentNameIndex++;
+                updateNamePrompt();
+            } else {
+                finalStart();
+            }
+        }
 
-            // Planète
-            ctx.beginPath();
-            ctx.arc(x, y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = p.color;
-            ctx.fill();
-        });
+        function finalStart() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('ui').style.display = 'block';
+            document.getElementById('leaderboard').style.display = 'block';
+            document.getElementById('timer-box').style.display = 'block';
+            
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            gameActive = true;
 
-        ctx.restore();
+            playerNames.forEach((name, i) => {
+                playersScores[name] = 0;
+                createPlanet(name, i);
+            });
 
-        document.getElementById('score').innerText = score;
-        requestAnimationFrame(draw);
-    }
+            startTimer();
+            initAbly();
+            updateLeaderboard();
+        }
 
-    function shareGame() {
-        const shareData = {
-            title: 'Gamaflak',
-            text: `Rejoins-moi sur Gamaflak ! Mon score est de ${score}.`,
-            url: window.location.href
-        };
-        if (navigator.share) {
-            navigator.share(shareData).catch((err) => console.log('Erreur:', err));
-        } else {
+        function initAbly() {
+            try {
+                ably = new Ably.Realtime(ABLY_KEY);
+                channel = ably.channels.get('gamaflak-room');
+                channel.subscribe('scoreUpdate', (msg) => {
+                    playersScores[msg.data.name] = msg.data.score;
+                    updateLeaderboard();
+                });
+            } catch(e) { console.warn("Ably offline"); }
+        }
+
+        function createPlanet(name, index) {
+            const orbitSize = 160 + (index * 75);
+            const duration = 8 + (index * 4);
+            const orbit = document.createElement('div');
+            orbit.className = 'orbit';
+            orbit.style.width = orbit.style.height = `${orbitSize}px`;
+            orbit.style.animationDuration = `${duration}s`;
+            
+            const planet = document.createElement('div');
+            planet.className = 'planet';
+            planet.style.background = `hsl(${Math.random() * 360}, 70%, 50%)`;
+            planet.innerText = name.substring(0, 3);
+            planet.onclick = (e) => { e.stopPropagation(); hit(name, e); };
+
+            orbit.appendChild(planet);
+            document.getElementById('system-container').appendChild(orbit);
+        }
+
+        function hit(name, e) {
+            if(!gameActive) return;
+            
+            createExplosion(e.clientX, e.clientY, e.target.style.backgroundColor);
+            playersScores[name] += Math.round(10 * multiplier);
+            
+            if(name === myPrimaryName) {
+                document.getElementById('score').innerText = playersScores[name];
+                if(channel) channel.publish('scoreUpdate', {name: name, score: playersScores[name]});
+            }
+            beep();
+            updateLeaderboard();
+        }
+
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = x + 'px'; p.style.top = y + 'px';
+                p.style.backgroundColor = color;
+                document.body.appendChild(p);
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 60;
+                requestAnimationFrame(() => {
+                    p.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) scale(0)`;
+                    p.style.opacity = '0';
+                });
+                setTimeout(() => p.remove(), 600);
+            }
+        }
+
+        function startTimer() {
+            const timerInt = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-box').innerText = timeLeft + "s";
+                if(timeLeft <= 0) {
+                    clearInterval(timerInt);
+                    gameActive = false;
+                    alert("FIN DE LA PARTIE ! Score final : " + playersScores[myPrimaryName]);
+                }
+            }, 1000);
+        }
+
+        function updateLeaderboard() {
+            const list = document.getElementById('player-list');
+            const sorted = Object.entries(playersScores).sort((a,b) => b - a);
+            list.innerHTML = sorted.map(([n, s]) => `
+                <div class="leader-item ${n === myPrimaryName ? 'me-highlight' : ''}">
+                    <span>${n}</span><b>${s}</b>
+                </div>
+            `).join('');
+        }
+
+        function beep() {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.frequency.value = 200 + (multiplier * 100);
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function shareGame() {
             navigator.clipboard.writeText(window.location.href);
             alert("Lien copié !");
         }
-    }
-
-    draw();
-</script>
+    </script>
 </body>
 </html>
