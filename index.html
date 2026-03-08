@@ -1,242 +1,166 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gamaflak</title>
-    <link rel="manifest" href="manifest.json">
+    <title>Gamaflak - Système Solaire Complet</title>
     <style>
-        @import url('https://googleapis.com');
-        * { box-sizing: border-box; perspective: none !important; transform-style: flat !important; }
-        body { margin: 0; background: #020205; color: white; font-family: 'Orbitron', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
-        
-        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-        .btn { background: #6081FF; border: none; color: white; padding: 15px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; width: 140px; font-family: 'Orbitron', sans-serif; transition: 0.2s; }
-        .btn:active { background: #ffcc00; color: black; }
-        
-        input { background: rgba(255,255,255,0.1); border: 2px solid #6081FF; border-radius: 20px; padding: 12px; color: white; margin-bottom: 15px; text-align: center; width: 250px; font-size: 16px; outline: none; font-family: 'Orbitron', sans-serif; }
-
-        #ui { position: absolute; top: 15px; left: 15px; z-index: 50; display: none; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border-left: 5px solid #ffcc00; }
-        
-        /* Leaderboard Style */
-        #leaderboard { position: absolute; top: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 15px; min-width: 180px; border: 1px solid #444; }
-        .leader-item { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; padding: 4px 8px; border-radius: 5px; }
-        .me-highlight { background: rgba(255, 204, 0, 0.2); border: 1px solid #ffcc00; color: #ffcc00; font-weight: bold; }
-
-        #dist-panel { position: absolute; bottom: 20px; right: 20px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 12px; border-radius: 10px; border: 1px solid #444; font-size: 13px; text-align: right; min-width: 160px; }
-        #sun { width: 45px; height: 45px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 30px #ff6600; position: absolute; z-index: 90; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 24px; }
-        .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; animation: rotate linear infinite; pointer-events: none; }
-        .planet { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; cursor: pointer; pointer-events: auto; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.8); z-index: 80; }
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        body { margin: 0; background: #050510; color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        canvas { display: block; }
+        #ui { position: absolute; top: 20px; left: 20px; pointer-events: none; }
+        #share-btn { 
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            padding: 15px 30px; background: #4A90E2; border: none; border-radius: 25px;
+            color: white; font-weight: bold; font-size: 16px; cursor: pointer; pointer-events: auto;
+        }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <b style="color:#ffcc00">MODE: <span id="modeDisp">-</span></b><br>
-        <b>MY SCORE: <span id="score">0</span></b>
-    </div>
+<div id="ui">
+    <h1 style="margin:0; font-size: 24px;">Gamaflak</h1>
+    <p>Score: <span id="score">0</span></p>
+</div>
 
-    <div id="leaderboard">
-        <div style="color:#ffcc00; margin-bottom:10px; font-size: 11px; text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px;">LIVE RANKING</div>
-        <div id="player-list"></div>
-    </div>
+<button id="share-btn" onclick="shareGame()">Partager mon score</button>
 
-    <div id="dist-panel">
-        <span id="p-full" style="color:#ffcc00; font-weight:bold;">Target</span><br>
-        <span id="p-val" style="font-size:16px;">---</span> <small>M km</small>
-    </div>
+<!-- Éléments Audio (remplace les sources par tes fichiers) -->
+<audio id="bgMusic" loop>
+    <source src="musique.mp3" type="audio/mpeg">
+</audio>
 
-    <div id="overlay">
-        <h1 style="letter-spacing: 5px; color:#6081FF;">GAMAFLAK</h1>
-        
-        <div id="step-note">
-            <p>1. CHOOSE FREQUENCY</p>
-            <div class="btn-grid">
-                <button class="btn" onclick="setNote('DO', 1)">C / DO</button>
-                <button class="btn" onclick="setNote('MI', 1.5)">E / MI</button>
-                <button class="btn" onclick="setNote('FA', 2)">F / FA</button>
-                <button class="btn" onclick="setNote('SOL', 2.5)">G / SOL</button>
-            </div>
-        </div>
+<canvas id="gameCanvas"></canvas>
 
-        <div id="step-count" style="display:none;">
-            <p>2. HOW MANY PLAYERS?</p>
-            <div class="btn-grid">
-                <button class="btn" onclick="setPlayerCount(1)">1 PLAYER</button>
-                <button class="btn" onclick="setPlayerCount(2)">2 PLAYERS</button>
-                <button class="btn" onclick="setPlayerCount(4)">4 PLAYERS</button>
-            </div>
-        </div>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const bgMusic = document.getElementById('bgMusic');
+    let score = 1250;
+    let musicStarted = false;
 
-        <div id="step-names" style="display:none;">
-            <p id="name-prompt">ENTER YOUR NAME</p>
-            <input type="text" id="nameInput" placeholder="Name..." maxlength="10">
-            <br>
-            <button class="btn" id="nameNextBtn" style="width:220px; background:#ffcc00; color:black;" onclick="nextName()">NEXT</button>
-        </div>
-    </div>
+    // Liste complète des 8 planètes
+    const planets = [
+        { name: "Mercure", dist: 50, size: 3, speed: 0.04, color: "#A5A5A5" },
+        { name: "Vénus", dist: 80, size: 6, speed: 0.015, color: "#E3BB76" },
+        { name: "Terre", dist: 110, size: 7, speed: 0.01, color: "#2271B3" },
+        { name: "Mars", dist: 140, size: 5, speed: 0.008, color: "#E27B58" },
+        { name: "Jupiter", dist: 210, size: 16, speed: 0.004, color: "#D39C7E" },
+        { name: "Saturne", dist: 280, size: 14, speed: 0.002, color: "#F4D47A", hasRings: true },
+        { name: "Uranus", dist: 340, size: 10, speed: 0.0015, color: "#BBE1E4" },
+        { name: "Neptune", dist: 390, size: 10, speed: 0.001, color: "#6081FF" }
+    ];
 
-    <div id="system-container" style="position:relative; width:100vw; height:100vh; display:flex; align-items:center; justify-content:center;">
-        <div id="sun" onclick="location.reload()">S</div>
-    </div>
-	
-	
-	<div id="ui">
-	    <b id="my-name-display" style="color:#ffcc00; text-transform: uppercase;">PLAYER</b><br>
-	    <small>MODE: <span id="modeDisp">-</span></small><br>
-	    <b>SCORE: <span id="score">0</span></b><br>
-	    <!-- Nouveau bouton de partage -->
-	    <button onclick="shareGame()" style="background:#25D366; border:none; color:white; border-radius:10px; padding:5px 10px; margin-top:5px; font-family:'Orbitron'; font-size:10px; cursor:pointer;">INVITE FRIENDS</button>
-	</div>
+    // Génération de la ceinture d'astéroïdes (entre Mars et Jupiter)
+    const asteroids = [];
+    for(let i = 0; i < 120; i++) {
+        asteroids.push({
+            dist: 165 + Math.random() * 25,
+            angle: Math.random() * Math.PI * 2,
+            size: Math.random() * 1.2,
+            speed: 0.004 + Math.random() * 0.002
+        });
+    }
 
-	
-	
+    let angles = planets.map(() => Math.random() * Math.PI * 2);
 
-    <script src="https://ably.com"></script>
-    <script>
-		
-		// Variable à ajouter au tout début de tes scripts (en haut)
-				let currentRank = 1; 
-	
-        let score = 0, audioCtx = null, multiplier = 1, selMode = "";
-        let targetPlayers = 1, currentNameIndex = 1, playerNames = [], myPrimaryName = "";
-        let playersScores = {}, ably, channel;
-
-        const ABLY_KEY = 'fLnNJA.dOy3HQ:GLmXxSIjEKpZwMm4n54ZE91hfEYMd1NS3veSJv9-n_0'; // Remplace par ta clé Ably
-
-        function setNote(mode, mult) {
-            selMode = mode; multiplier = mult;
-            document.getElementById('step-note').style.display = 'none';
-            document.getElementById('step-count').style.display = 'block';
+    // Gestion de l'audio au premier clic (obligatoire sur mobile/navigateur)
+    window.addEventListener('pointerdown', () => {
+        if (!musicStarted && bgMusic.src) {
+            bgMusic.play().catch(() => {});
+            musicStarted = true;
         }
+    });
 
-        function setPlayerCount(count) {
-            targetPlayers = count;
-            document.getElementById('step-count').style.display = 'none';
-            document.getElementById('step-names').style.display = 'block';
-            updateNamePrompt();
-        }
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
 
-        function updateNamePrompt() {
-            document.getElementById('name-prompt').innerText = `ENTER NAME FOR PLAYER ${currentNameIndex}`;
-            document.getElementById('nameInput').value = "";
-            if(currentNameIndex === targetPlayers) document.getElementById('nameNextBtn').innerText = "START GAME";
-        }
+    function draw() {
+        ctx.fillStyle = "#050510";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        function nextName() {
-            let n = document.getElementById('nameInput').value.trim();
-            let finalName = n || `P${currentNameIndex}`;
-            playerNames.push(finalName);
-            if(currentNameIndex === 1) myPrimaryName = finalName; // Le premier nom saisi est l'utilisateur actuel
-            
-            if(currentNameIndex < targetPlayers) {
-                currentNameIndex++;
-                updateNamePrompt();
-            } else {
-                finalStart();
-            }
-        }
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
 
-        function finalStart() {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            playerNames.forEach(name => playersScores[name] = 0);
-            
-            if (typeof Ably !== 'undefined' && ABLY_KEY !== 'TON_API_KEY_ABLY') {
-                ably = new Ably.Realtime(ABLY_KEY);
-                channel = ably.channels.get('gamaflak-room');
-                channel.subscribe('score-update', (msg) => {
-                    playersScores[msg.data.user] = msg.data.score;
-                    updateBoard();
-                });
+        // ZOOM DYNAMIQUE (ajusté pour 8 planètes + ceinture)
+        const maxDist = planets[planets.length - 1].dist + 30;
+        const scale = Math.min(canvas.width, canvas.height) / (maxDist * 2.2);
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.scale(scale, scale);
+
+        // 1. Soleil
+        ctx.beginPath();
+        ctx.arc(0, 0, 25, 0, Math.PI * 2);
+        ctx.fillStyle = "#FFD700";
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "#FFD700";
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // 2. Ceinture d'astéroïdes
+        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+        asteroids.forEach(as => {
+            as.angle += as.speed;
+            const ax = Math.cos(as.angle) * as.dist;
+            const ay = Math.sin(as.angle) * as.dist;
+            ctx.fillRect(ax, ay, as.size, as.size);
+        });
+
+        // 3. Planètes
+        planets.forEach((p, i) => {
+            angles[i] += p.speed;
+            const x = Math.cos(angles[i]) * p.dist;
+            const y = Math.sin(angles[i]) * p.dist;
+
+            // Orbite
+            ctx.beginPath();
+            ctx.arc(0, 0, p.dist, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+            ctx.lineWidth = 1 / scale;
+            ctx.stroke();
+
+            // Anneaux de Saturne (corrigés visuellement)
+            if (p.hasRings) {
+                ctx.beginPath();
+                ctx.ellipse(x, y, p.size * 2.2, p.size * 0.8, Math.PI / 8, 0, Math.PI * 2);
+                ctx.strokeStyle = "rgba(210, 180, 140, 0.5)";
+                ctx.lineWidth = 3;
+                ctx.stroke();
             }
 
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('ui').style.display = 'block';
-            document.getElementById('leaderboard').style.display = 'block';
-            document.getElementById('dist-panel').style.display = 'block';
-            document.getElementById('modeDisp').innerText = selMode;
-            updateBoard();
-            renderSystem();
+            // Planète
+            ctx.beginPath();
+            ctx.arc(x, y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+        });
+
+        ctx.restore();
+
+        document.getElementById('score').innerText = score;
+        requestAnimationFrame(draw);
+    }
+
+    function shareGame() {
+        const shareData = {
+            title: 'Gamaflak',
+            text: `Rejoins-moi sur Gamaflak ! Mon score est de ${score}.`,
+            url: window.location.href
+        };
+        if (navigator.share) {
+            navigator.share(shareData).catch((err) => console.log('Erreur:', err));
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Lien copié !");
         }
+    }
 
-        function updateScore(pts, key, fullName, dist) {
-            score += Math.round(pts * multiplier);
-            playersScores[myPrimaryName] = score;
-            document.getElementById('score').innerText = score;
-            document.getElementById('p-full').innerText = fullName;
-            document.getElementById('p-val').innerText = dist;
-            updateBoard();
-            if(channel) channel.publish('score-update', { user: myPrimaryName, score: score });
-        }
-
-        
-		
-
-		function updateBoard() {
-		    const list = document.getElementById('player-list');
-		    list.innerHTML = "";
-		    
-		    // 1. On trie les joueurs par score
-		    const sortedPlayers = Object.keys(playersScores)
-		        .sort((a, b) => playersScores[b] - playersScores[a]);
-
-		    // 2. LOGIQUE DE VIBRATION (Le détecteur de chute)
-		    const newRank = sortedPlayers.indexOf(myPrimaryName) + 1;
-		    
-		    // Si ton nouveau rang est plus grand (ex: tu passes de 1er à 2ème)
-		    if (newRank > currentRank && newRank !== 0) {
-		        if (navigator.vibrate) {
-		            // Le téléphone vibre 3 fois rapidement pour t'alerter
-		            navigator.vibrate([100, 50, 100, 50, 100]); 
-		        }
-		    }
-		    currentRank = newRank; // On met à jour ton rang actuel
-
-		    // 3. On affiche la liste mise à jour
-		    sortedPlayers.forEach((u, index) => {
-		        const div = document.createElement('div');
-		        div.className = `leader-item ${u === myPrimaryName ? 'me-highlight' : ''}`;
-		        div.innerHTML = `<span>#${index + 1} ${u}</span><span>${playersScores[u]}</span>`;
-		        list.appendChild(div);
-		    });
-		}
-
-		
-
-        function playNote(f) {
-            if (!audioCtx) return;
-            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-            o.type = 'triangle'; o.frequency.setValueAtTime(f, audioCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1);
-            o.connect(g); g.connect(audioCtx.destination);
-            o.start(); o.stop(audioCtx.currentTime + 1);
-        }
-
-        function renderSystem() {
-            const container = document.getElementById('system-container');
-            const data = {
-                "Me": {full:"Mercury", d:"57.9", c:"#979797", orb:95, s:5, f:261, p:10},
-                "Ve": {full:"Venus", d:"108.2", c:"#E3BB76", orb:140, s:8, f:293, p:15},
-                "Ea": {full:"Earth", d:"149.6", c:"#2271B3", orb:185, s:12, f:329, p:20},
-                "Ma": {full:"Mars", d:"227.9", c:"#E27B58", orb:230, s:16, f:349, p:25},
-                "Ju": {full:"Jupiter", d:"778.6", c:"#D39C7E", orb:310, s:22, f:392, p:40},
-                "Sa": {full:"Saturn", d:"1433", c:"#385", s:30, f:440, p:50},
-                "Ur": {full:"Uranus", d:"2872", c:"#BBE1E4", orb:460, s:40, f:493, p:60},
-                "Ne": {full:"Neptune", d:"4495", c:"#6081FF", orb:535, s:50, f:523, p:70}
-            };
-            Object.keys(data).forEach(k => {
-                const p = data[k];
-                const orb = document.createElement('div');
-                orb.className = 'orbit'; orb.style.width = orb.style.height = p.orb + 'px';
-                orb.style.animationDuration = p.s + 's'; orb.style.borderColor = p.c + '55';
-                const pl = document.createElement('div');
-                pl.className = 'planet'; pl.style.backgroundColor = p.c; pl.innerText = k;
-                pl.onclick = (e) => { e.stopPropagation(); playNote(p.f); updateScore(p.p, k, p.full, p.d); };
-                orb.appendChild(pl); container.appendChild(orb);
-            });
-        }
-    </script>
+    draw();
+</script>
 </body>
 </html>
