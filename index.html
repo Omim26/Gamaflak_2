@@ -3,29 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gamaflak | Solar Harmonics</title>
+    <title>Gamaflak | 8 Planets Musical System</title>
     <link href="https://googleapis.com" rel="stylesheet">
     <style>
         * { box-sizing: border-box; perspective: none !important; }
         body { margin: 0; background: #020205; color: white; font-family: 'Orbitron', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
         
+        /* Overlay et Menus */
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
         .btn { background: #6081FF; border: none; color: white; padding: 15px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; width: 140px; font-family: 'Orbitron', sans-serif; transition: 0.2s; }
         .btn:active { background: #ffcc00; color: black; transform: scale(0.95); }
         input { background: rgba(255,255,255,0.1); border: 2px solid #6081FF; border-radius: 20px; padding: 12px; color: white; margin-bottom: 15px; text-align: center; width: 250px; font-size: 16px; outline: none; font-family: 'Orbitron', sans-serif; }
 
+        /* Interface de jeu */
         #ui { position: absolute; top: 15px; left: 15px; z-index: 50; display: none; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border-left: 5px solid #ffcc00; }
         #leaderboard { position: absolute; top: 15px; right: 15px; z-index: 50; display: none; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 15px; min-width: 180px; border: 1px solid #444; }
-        .leader-item { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; padding: 4px 8px; border-radius: 5px; }
-        .me-highlight { background: rgba(255, 204, 0, 0.2); border: 1px solid #ffcc00; color: #ffcc00; }
+        .leader-item { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; padding: 4px 8px; border-radius: 5px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .me-highlight { background: rgba(255, 204, 0, 0.2); border: 1px solid #ffcc00; color: #ffcc00; font-weight: bold; }
 
+        /* Système Solaire */
         #system-container { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
-        #sun { width: 60px; height: 60px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 40px #ff6600; z-index: 90; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 20px; }
+        #sun { width: 65px; height: 65px; background: radial-gradient(circle, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 50px #ff6600; z-index: 90; cursor: pointer; display: flex; align-items: center; justify-content: center; color: black; font-weight: bold; font-size: 24px; }
         .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; animation: rotate linear infinite; pointer-events: none; }
-        .planet { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 50%; cursor: pointer; pointer-events: auto; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; box-shadow: inset -3px -3px 6px rgba(0,0,0,0.6); color: white; }
+        .planet { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; pointer-events: auto; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.7); color: white; transition: 0.1s; }
+        .planet:active { transform: translate(-50%, -50%) scale(1.2); }
         
-        .particle { position: absolute; width: 5px; height: 5px; border-radius: 50%; pointer-events: none; z-index: 100; transition: transform 0.6s ease-out, opacity 0.6s ease-out; }
+        .particle { position: absolute; width: 5px; height: 5px; border-radius: 50%; pointer-events: none; z-index: 110; transition: transform 0.6s ease-out, opacity 0.6s ease-out; }
 
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
@@ -33,19 +37,22 @@
 <body>
 
     <div id="ui">
-        <b id="my-name-display" style="color:#ffcc00; text-transform: uppercase;">PLAYER</b><br>
-        <small>BASE: <span id="modeDisp">-</span></small><br>
-        <b>SCORE: <span id="score">0</span></b>
+        <b style="color:#ffcc00">SYSTEM READY</b><br>
+        <small>MODE: <span id="modeDisp">-</span></small>
     </div>
 
     <div id="leaderboard">
+        <div style="color:#ffcc00; font-size:10px; text-align:center; margin-bottom:8px; border-bottom: 1px solid #444; padding-bottom: 5px;">LIVE RANKING</div>
         <div id="player-list"></div>
     </div>
 
     <div id="overlay">
-        <h1 style="letter-spacing: 5px; color:#6081FF;">GAMAFLAK</h1>
+        <h1 style="letter-spacing: 8px; color:#6081FF; margin-bottom: 5px;">GAMAFLAK</h1>
+        <p style="font-size: 10px; opacity: 0.6; margin-bottom: 30px;">HARMONIC ORBITAL SIMULATOR</p>
+        
+        <!-- STEP 1: SELECT NOTE -->
         <div id="step-note">
-            <p>1. CHOOSE BASE FREQUENCY</p>
+            <p>1. SELECT BASE FREQUENCY</p>
             <div class="btn-grid">
                 <button class="btn" onclick="setNote('DO', 261.63)">C / DO</button>
                 <button class="btn" onclick="setNote('MI', 329.63)">E / MI</button>
@@ -53,11 +60,23 @@
                 <button class="btn" onclick="setNote('SOL', 392.00)">G / SOL</button>
             </div>
         </div>
+
+        <!-- STEP 2: SELECT PLAYER COUNT -->
+        <div id="step-count" style="display:none;">
+            <p>2. SELECT NUMBER OF PLAYERS</p>
+            <div class="btn-grid">
+                <button class="btn" onclick="setPlayerCount(1)">1 PLAYER</button>
+                <button class="btn" onclick="setPlayerCount(2)">2 PLAYERS</button>
+                <button class="btn" onclick="setPlayerCount(4)">4 PLAYERS</button>
+            </div>
+        </div>
+
+        <!-- STEP 3: NAMES INPUT -->
         <div id="step-names" style="display:none;">
-            <p>2. ENTER YOUR NAME</p>
-            <input type="text" id="nameInput" placeholder="Name..." maxlength="10">
+            <p id="name-prompt">ENTER NAME FOR PLAYER 1</p>
+            <input type="text" id="nameInput" placeholder="Enter name..." maxlength="10">
             <br>
-            <button class="btn" style="width:220px; background:#ffcc00; color:black;" onclick="finalStart()">START GAME</button>
+            <button class="btn" id="nameNextBtn" style="width:220px; background:#ffcc00; color:black;" onclick="nextName()">CONTINUE</button>
         </div>
     </div>
 
@@ -67,8 +86,8 @@
 
     <script src="https://ably.com"></script>
     <script>
-        // 8 Planètes : Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune
-        const PLANETS = [
+        // Data for the 8 planets in English with required format (Me, Ve, Ea, Ma, Ju, Sa, Ur, Ne)
+        const PLANETS_DATA = [
             {n: "Me", r: 1.000}, // Do
             {n: "Ve", r: 1.125}, // Ré
             {n: "Ea", r: 1.250}, // Mi
@@ -76,117 +95,158 @@
             {n: "Ju", r: 1.500}, // Sol
             {n: "Sa", r: 1.666}, // La
             {n: "Ur", r: 1.875}, // Si
-            {n: "Ne", r: 2.000}  // Do+
+            {n: "Ne", r: 2.000}  // Do octave
         ];
         
-        let score = 0, audioCtx = null, baseFreq = 261.63, myName = "Player";
-        let playersScores = {}, ably, channel;
+        let audioCtx = null, baseFreq = 261.63, selModeName = "";
+        let targetPlayers = 1, currentNameIndex = 1, playerNames = [], playersScores = {};
+        let currentPlayerTurn = 0, ably, channel;
 
         const ABLY_KEY = 'fLnNJA.dOy3HQ:GLmXxSIjEKpZwMm4n54ZE91hfEYMd1NS3veSJv9-n_0';
 
+        // --- NAVIGATION LOGIC ---
         function setNote(mode, freq) {
             baseFreq = freq;
+            selModeName = mode;
             document.getElementById('modeDisp').innerText = mode;
             document.getElementById('step-note').style.display = 'none';
+            document.getElementById('step-count').style.display = 'block';
+        }
+
+        function setPlayerCount(count) {
+            targetPlayers = count;
+            document.getElementById('step-count').style.display = 'none';
             document.getElementById('step-names').style.display = 'block';
         }
 
-        function finalStart() {
-            let n = document.getElementById('nameInput').value.trim();
-            myName = n || "Pilot";
-            document.getElementById('my-name-display').innerText = myName;
+        function nextName() {
+            let val = document.getElementById('nameInput').value.trim();
+            let finalName = val || ("Player_" + currentNameIndex);
+            
+            playerNames.push(finalName);
+            playersScores[finalName] = 0;
+
+            if (currentNameIndex < targetPlayers) {
+                currentNameIndex++;
+                document.getElementById('name-prompt').innerText = "ENTER NAME FOR PLAYER " + currentNameIndex;
+                document.getElementById('nameInput').value = "";
+                if(currentNameIndex === targetPlayers) document.getElementById('nameNextBtn').innerText = "START GAME";
+            } else {
+                launchSystem();
+            }
+        }
+
+        // --- GAME LAUNCH ---
+        function launchSystem() {
             document.getElementById('overlay').style.display = 'none';
             document.getElementById('ui').style.display = 'block';
             document.getElementById('leaderboard').style.display = 'block';
             
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            playersScores[myName] = 0;
-
-            PLANETS.forEach((p, i) => createPlanet(p, i));
-
+            
+            // Create the 8 planets
+            PLANETS_DATA.forEach((p, i) => createPlanetElement(p, i));
+            
             initAbly();
-            updateLeaderboard();
+            updateRankingUI();
         }
 
-        function createPlanet(data, index) {
+        function createPlanetElement(data, index) {
             const container = document.getElementById('system-container');
-            const orbitSize = 130 + (index * 42); 
-            const speed = 7 + (index * 3); 
+            const orbitSize = 150 + (index * 45); 
+            const orbitSpeed = 10 + (index * 4); 
             
             const orbit = document.createElement('div');
             orbit.className = 'orbit';
             orbit.style.width = orbit.style.height = `${orbitSize}px`;
-            orbit.style.animationDuration = `${speed}s`;
+            orbit.style.animationDuration = `${orbitSpeed}s`;
             
             const planet = document.createElement('div');
             planet.className = 'planet';
-            const freq = baseFreq * data.r;
             planet.innerText = data.n;
-            planet.style.background = `hsl(${(index * 40)}, 65%, 50%)`;
+            planet.style.background = `hsl(${(index * 40)}, 60%, 50%)`;
             
             planet.onclick = (e) => {
                 e.stopPropagation();
-                playTone(freq);
-                createExplosion(e.clientX, e.clientY, planet.style.background);
-                updateScore();
+                handleHit(data.r, planet.style.background, e);
             };
 
             orbit.appendChild(planet);
             container.appendChild(orbit);
         }
 
-        function playTone(freq) {
+        // --- INTERACTION LOGIC ---
+        function handleHit(ratio, color, event) {
+            // Sound
+            playMusicalTone(baseFreq * ratio);
+            
+            // Visuals
+            createExplosionEffect(event.clientX, event.clientY, color);
+            
+            // Points (Awarded to current active player in cycle)
+            let activeName = playerNames[currentPlayerTurn];
+            playersScores[activeName] += 10;
+            
+            // Sync
+            if(channel) channel.publish('scoreUpdate', {name: activeName, score: playersScores[activeName]});
+            
+            // Cycle through players if multiplayer
+            if(targetPlayers > 1) {
+                currentPlayerTurn = (currentPlayerTurn + 1) % targetPlayers;
+            }
+            
+            updateRankingUI();
+        }
+
+        function playMusicalTone(freq) {
             if(!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.frequency.value = freq;
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.6);
             osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
         }
 
-        function updateScore() {
-            score += 10;
-            playersScores[myName] = score;
-            document.getElementById('score').innerText = score;
-            if(channel) channel.publish('scoreUpdate', {name: myName, score: score});
-            updateLeaderboard();
-        }
-
-        function createExplosion(x, y, color) {
-            for (let i = 0; i < 6; i++) {
+        function createExplosionEffect(x, y, color) {
+            for (let i = 0; i < 8; i++) {
                 const p = document.createElement('div');
                 p.className = 'particle';
                 p.style.left = x + 'px'; p.style.top = y + 'px';
                 p.style.backgroundColor = color;
                 document.body.appendChild(p);
                 const angle = Math.random() * Math.PI * 2;
+                const dist = 50 + Math.random() * 30;
                 requestAnimationFrame(() => {
-                    p.style.transform = `translate(${Math.cos(angle)*50}px, ${Math.sin(angle)*50}px) scale(0)`;
+                    p.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) scale(0)`;
                     p.style.opacity = '0';
                 });
                 setTimeout(() => p.remove(), 600);
             }
         }
 
+        // --- NETWORK & UI ---
         function initAbly() {
             try {
                 ably = new Ably.Realtime(ABLY_KEY);
-                channel = ably.channels.get('gamaflak-room');
+                channel = ably.channels.get('gamaflak-live');
                 channel.subscribe('scoreUpdate', (msg) => {
                     playersScores[msg.data.name] = msg.data.score;
-                    updateLeaderboard();
+                    updateRankingUI();
                 });
-            } catch(e) {}
+            } catch(e) { console.warn("Ably disconnected"); }
         }
 
-        function updateLeaderboard() {
+        function updateRankingUI() {
             const list = document.getElementById('player-list');
             const sorted = Object.entries(playersScores).sort((a,b) => b - a);
-            list.innerHTML = `<div style="color:#ffcc00; font-size:10px; text-align:center; margin-bottom:5px;">RANKING</div>` + 
-                sorted.map(([n, s]) => `
-                <div class="leader-item ${n === myName ? 'me-highlight' : ''}">
-                    <span>${n}</span><b>${s}</b>
+            
+            let nextToPlay = playerNames[currentPlayerTurn];
+            
+            list.innerHTML = sorted.map(([n, s]) => `
+                <div class="leader-item ${n === nextToPlay ? 'me-highlight' : ''}">
+                    <span>${n} ${n === nextToPlay ? '➜' : ''}</span>
+                    <b>${s}</b>
                 </div>
             `).join('');
         }
