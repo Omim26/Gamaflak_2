@@ -8,7 +8,18 @@
     <style>
 		
 		@import url('https://googleapis.com');
-	
+
+		.particle {
+		    position: absolute;
+		    width: 6px;
+		    height: 6px;
+		    border-radius: 50%;
+		    pointer-events: none;
+		    z-index: 100;
+		    transition: transform 0.6s ease-out, opacity 0.6s ease-out;
+		}
+				
+			
         * { box-sizing: border-box; perspective: none !important; }
         body { margin: 0; background: #020205; color: white; font-family: 'Orbitron', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
         
