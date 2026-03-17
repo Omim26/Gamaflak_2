@@ -3,103 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GamAflak | Hyper Fusion</title>
+    <title>GamAflak | Solar Engine</title>
     <link href="https://googleapis.com" rel="stylesheet">
     <style>
-        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
         
         /* Intro & Flash */
-        #intro-layer { position: fixed; inset: 0; background: #000; z-index: 200; display: flex; align-items: center; justify-content: center; perspective: 1000px; cursor: pointer; }
-        #flash { position: fixed; inset: 0; background: #fff; opacity: 0; z-index: 210; pointer-events: none; }
+        #intro-layer { position: fixed; inset: 0; background: #000; z-index: 200; display: flex; align-items: center; justify-content: center; perspective: 1200px; cursor: pointer; transition: opacity 0.8s; }
+        #flash-bang { position: fixed; inset: 0; background: white; opacity: 0; z-index: 210; pointer-events: none; }
         
-        .word { position: absolute; font-size: 8vw; font-weight: 900; transition: all 1.5s cubic-bezier(0.19, 1, 0.22, 1); opacity: 0; }
-        
-        /* Position initiale : 30° de rotation */
-        #part-1 { color: #ff4444; transform: translateX(-150%) rotateY(30deg); }
-        #part-2 { color: #44ff44; transform: translateX(150%) rotateY(-30deg); }
-        
-        /* Fusion : Suppression du E et A via la largeur à 0 et opacité */
-        .fusion-active #part-1 { opacity: 1; transform: translateX(-48%) rotateY(0deg); }
-        .fusion-active #part-2 { opacity: 1; transform: translateX(52%) rotateY(0deg); }
-        
-        .letter-kill { display: inline-block; transition: all 0.3s ease 1.2s; width: 1em; opacity: 1; }
-        .fusion-active .letter-kill { width: 0; opacity: 0; transform: scale(0); }
+        .word { position: absolute; font-size: 8vw; font-weight: 900; letter-spacing: 5px; opacity: 0; transition: all 1.8s cubic-bezier(0.19, 1, 0.22, 1); }
+        #word-game { color: #ff4444; transform: translateX(-120%) rotateY(30deg); }
+        #word-aflak { color: #44ff44; transform: translateX(120%) rotateY(-30deg); }
+        .fusion-active #word-game { opacity: 1; transform: translateX(-18%) rotateY(0deg); }
+        .fusion-active #word-aflak { opacity: 1; transform: translateX(20%) rotateY(0deg); }
+        .char-to-hide { transition: opacity 0.2s ease-out 1.5s; }
+        .fusion-active .char-to-hide { opacity: 0; }
 
+        /* Background & UI */
+        #stars-container { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle var(--d) infinite; }
+        
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .btn { background: #44ff44; border: none; color: #000; padding: 15px 40px; border-radius: 40px; font-size: 18px; font-weight: bold; cursor: pointer; font-family: 'Orbitron'; box-shadow: 0 0 20px #44ff4466; }
+        .btn { background: #44ff44; border: none; color: #000; padding: 15px 40px; border-radius: 40px; font-size: 18px; font-weight: bold; cursor: pointer; font-family: 'Orbitron'; transition: 0.3s; box-shadow: 0 0 20px rgba(68, 255, 68, 0.4); }
+        .btn:hover { transform: scale(1.1); background: #fff; }
 
-        @keyframes flashEffect { 0% { opacity: 0; } 10% { opacity: 1; } 100% { opacity: 0; } }
+        /* Moteur de Système Solaire */
+        #system-container { position: relative; width: 100vw; height: 100vh; display: none; align-items: center; justify-content: center; transform: scale(0.8); }
+        #sun { width: 80px; height: 80px; background: radial-gradient(circle, #fff, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 60px #ff6600; z-index: 90; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 900; border: none; cursor: pointer; }
+        
+        .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.08); border-radius: 50%; animation: rotate linear infinite; pointer-events: none; }
+        .planet { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: auto; box-shadow: inset -4px -4px 10px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: rgba(255,255,255,0.8); }
+        
+        /* Ceinture d'astéroïdes */
+        .asteroid { position: absolute; background: #888; border-radius: 50%; opacity: 0.6; }
+
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        @keyframes flashAnim { 0% { opacity: 0; } 10% { opacity: 1; } 100% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div id="flash"></div>
+    <div id="flash-bang"></div>
+    <div id="stars-container"></div>
 
     <div id="intro-layer" onclick="runCinematic()">
-        <div id="part-1" class="word">GAM<span class="letter-kill">E</span></div>
-        <div id="part-2" class="word"><span class="letter-kill">A</span>FLAK</div>
+        <div id="word-game" class="word">GAM<span class="char-to-hide">E</span></div>
+        <div id="word-aflak" class="word"><span class="char-to-hide">A</span>FLAK</div>
     </div>
 
     <div id="overlay">
-        <h1 style="color:#ff4444; letter-spacing:10px">GAMAFLAK</h1>
-        <button class="btn" onclick="location.reload()">REPLAY</button>
+        <h1 style="letter-spacing: 15px; color:#ff4444; margin-bottom: 40px;">GAMAFLAK</h1>
+        <button class="btn" onclick="startGame()">INITIALISER MISSION</button>
+    </div>
+
+    <div id="system-container">
+        <div id="sun" onclick="location.reload()">S</div>
     </div>
 
     <script>
+        const PLANETS = [
+            {n: "Me", c: "#999", size: 12, dist: 120, speed: 4},
+            {n: "Ve", c: "#E3BB76", size: 18, dist: 170, speed: 7},
+            {n: "Ea", c: "#2271B3", size: 20, dist: 230, speed: 10},
+            {n: "Ma", c: "#E27B58", size: 16, dist: 290, speed: 15},
+            {belt: true, dist: 340},
+            {n: "Ju", c: "#D39C7E", size: 45, dist: 430, speed: 25},
+            {n: "Sa", c: "#C5AB6E", size: 38, dist: 550, speed: 35},
+            {n: "Ur", c: "#BBE1E4", size: 28, dist: 650, speed: 50},
+            {n: "Ne", c: "#6081FF", size: 28, dist: 740, speed: 70}
+        ];
+
         let audioCtx;
 
-        function playSpaceSound() {
+        function initStars() {
+            const container = document.getElementById('stars-container');
+            for(let i=0; i<200; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 2 + 1;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.setProperty('--d', (Math.random() * 3 + 2) + 's');
+                container.appendChild(star);
+            }
+        }
+
+        function playImpactSound() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const now = audioCtx.currentTime;
-
-            // Le "Sweep" de l'espace
+            
+            // Riser
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(60, now);
-            osc.frequency.exponentialRampToValueAtTime(1200, now + 1.2);
-            gain.gain.setValueAtTime(0.01, now);
-            gain.gain.exponentialRampToValueAtTime(0.2, now + 1.2);
+            osc.frequency.setValueAtTime(50, now);
+            osc.frequency.exponentialRampToValueAtTime(900, now + 1.5);
+            gain.gain.linearRampToValueAtTime(0.3, now + 1.5);
             osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(now + 1.3);
+            osc.start(); osc.stop(now + 1.55);
 
-            // L'Impact de fusion (Bass Drop)
+            // Impact
             setTimeout(() => {
-                const impact = audioCtx.createOscillator();
-                const impactGain = audioCtx.createGain();
-                impact.type = 'triangle';
-                impact.frequency.setValueAtTime(80, audioCtx.currentTime);
-                impact.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
-                impactGain.gain.setValueAtTime(0.8, audioCtx.currentTime);
-                impactGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.5);
-                impact.connect(impactGain); impactGain.connect(audioCtx.destination);
-                impact.start(); impact.stop(audioCtx.currentTime + 1.5);
-                
-                // Vibrations haptiques si sur mobile
-                if (navigator.vibrate) navigator.vibrate(200);
-            }, 1200);
+                const sub = audioCtx.createOscillator();
+                const subG = audioCtx.createGain();
+                sub.type = 'square';
+                sub.frequency.setValueAtTime(100, audioCtx.currentTime);
+                sub.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+                subG.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1);
+                sub.connect(subG); subG.connect(audioCtx.destination);
+                sub.start(); sub.stop(audioCtx.currentTime + 1);
+            }, 1500);
         }
 
         function runCinematic() {
             const intro = document.getElementById('intro-layer');
-            if (intro.classList.contains('fusion-active')) return;
-            
+            if(intro.classList.contains('fusion-active')) return;
             intro.classList.add('fusion-active');
-            playSpaceSound();
-
-            // Déclenchement du Flash Blanc
+            playImpactSound();
+            
             setTimeout(() => {
-                document.getElementById('flash').style.animation = "flashEffect 0.8s forwards";
-            }, 1200);
+                document.getElementById('flash-bang').style.animation = "flashAnim 0.8s forwards";
+            }, 1500);
 
-            // Transition finale
             setTimeout(() => {
                 intro.style.opacity = '0';
                 setTimeout(() => {
                     intro.style.display = 'none';
                     document.getElementById('overlay').style.display = 'flex';
+                    initStars();
                 }, 800);
-            }, 3000);
+            }, 2600);
+        }
+
+        function startGame() {
+            document.getElementById('overlay').style.display = 'none';
+            const container = document.getElementById('system-container');
+            container.style.display = 'flex';
+
+            PLANETS.forEach(p => {
+                if(p.belt) {
+                    // Création d'une ceinture d'astéroïdes simplifiée
+                    const orbit = document.createElement('div');
+                    orbit.className = 'orbit';
+                    orbit.style.width = orbit.style.height = p.dist + 'px';
+                    orbit.style.animationDuration = '60s';
+                    for(let i=0; i<30; i++) {
+                        const a = document.createElement('div');
+                        a.className = 'asteroid';
+                        a.style.width = a.style.height = (Math.random()*4+2)+'px';
+                        const angle = (i / 30) * Math.PI * 2;
+                        a.style.left = (Math.cos(angle) * 50 + 50) + '%';
+                        a.style.top = (Math.sin(angle) * 50 + 50) + '%';
+                        orbit.appendChild(a);
+                    }
+                    container.appendChild(orbit);
+                } else {
+                    const orbit = document.createElement('div');
+                    orbit.className = 'orbit';
+                    orbit.style.width = orbit.style.height = p.dist + 'px';
+                    orbit.style.animationDuration = p.speed + 's';
+                    
+                    const planet = document.createElement('div');
+                    planet.className = 'planet';
+                    planet.style.width = planet.style.height = p.size + 'px';
+                    planet.style.backgroundColor = p.c;
+                    planet.innerText = p.n;
+                    
+                    orbit.appendChild(planet);
+                    container.appendChild(orbit);
+                }
+            });
         }
     </script>
 </body>
