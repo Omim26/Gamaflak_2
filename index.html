@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GamAflak | S-Stop Inverted</title>
+    <title>GamAflak | Red & Green Edition</title>
     <link href="https://googleapis.com" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
@@ -20,21 +20,26 @@
         #stars-container { position: fixed; inset: 0; z-index: 0; }
         .star { position: absolute; background: white; border-radius: 50%; opacity: 0.5; animation: twinkle var(--d) infinite; }
         
+        /* Menus Thème Rouge/Vert */
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .btn { background: #6081FF; border: none; color: white; padding: 15px; border-radius: 40px; font-size: 14px; font-weight: bold; cursor: pointer; width: 140px; font-family: 'Orbitron'; margin: 5px; }
-        input { background: rgba(255,255,255,0.1); border: 2px solid #6081FF; border-radius: 20px; padding: 15px; color: white; width: 280px; font-size: 18px; text-align: center; font-family: 'Orbitron'; outline: none; }
+        .btn { background: #44ff44; border: none; color: #000; padding: 15px; border-radius: 40px; font-size: 14px; font-weight: bold; cursor: pointer; width: 140px; font-family: 'Orbitron'; margin: 5px; transition: 0.3s; }
+        .btn:active { background: #ff4444; color: white; }
+        input { background: rgba(255,255,255,0.1); border: 2px solid #ff4444; border-radius: 20px; padding: 15px; color: white; width: 280px; font-size: 18px; text-align: center; font-family: 'Orbitron'; outline: none; }
 
         #system-container { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; transition: transform 0.4s; }
-        #sun { width: 70px; height: 70px; background: radial-gradient(circle, #fff, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 50px #ff6600; z-index: 90; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 900; font-size: 28px; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); }
+        #sun { width: 70px; height: 70px; background: radial-gradient(circle, #fff, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 50px #ff6600; z-index: 90; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 900; font-size: 28px; cursor: pointer; border: 2px solid #44ff44; }
         
         .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; animation: rotate linear infinite; pointer-events: none; }
         .orbit.glow { border: 4px solid var(--c) !important; box-shadow: 0 0 40px var(--c); z-index: 85; }
         .planet { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; pointer-events: auto; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.5); }
 
-        #ui { position: absolute; top: 20px; left: 20px; z-index: 50; display: none; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border-left: 6px solid #ffcc00; }
-        #leaderboard { position: absolute; top: 20px; right: 20px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 15px; min-width: 200px; border: 1px solid #333; }
-        #dist-panel { position: absolute; bottom: 20px; right: 20px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 1px solid #444; text-align: right; min-width: 180px; border-right: 5px solid #6081FF; }
+        /* UI In-Game */
+        #ui { position: absolute; top: 20px; left: 20px; z-index: 50; display: none; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border-left: 6px solid #44ff44; border-right: 2px solid #ff4444; }
+        #leaderboard { position: absolute; top: 20px; right: 20px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 15px; min-width: 200px; border: 1px solid #ff4444; }
+        #dist-panel { position: absolute; bottom: 20px; right: 20px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 1px solid #44ff44; text-align: right; min-width: 180px; }
         
+        .active-rank { background: rgba(68, 255, 68, 0.2); color: #44ff44; border: 1px solid #44ff44; }
+
         .asteroid { position: absolute; background: #fff; border-radius: 40%; box-shadow: 0 0 8px #fff; opacity: 0.8; }
         .rings-sa { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotateX(75deg); width: 52px; height: 52px; border: 4px solid rgba(197, 171, 110, 0.5); border-radius: 50%; }
         .rings-ur { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotateY(80deg); width: 48px; height: 48px; border: 2px solid rgba(187, 225, 228, 0.4); border-radius: 50%; }
@@ -52,26 +57,26 @@
 
     <div id="stars-container"></div>
     <div id="ui">
-        <b id="turn-display" style="color:#ffcc00">PILOT READY</b><br>
-        <small style="opacity:0.6">CLICK 'S' TO EXIT</small>
+        <b id="turn-display" style="color:#44ff44">PILOT READY</b><br>
+        <small style="color:#ff4444">CLICK 'S' TO RESET</small>
     </div>
     <div id="leaderboard"><div id="player-list"></div></div>
-    <div id="dist-panel"><span id="p-full" style="color:#ffcc00; font-weight:bold; text-transform: uppercase;">SCANNER</span><br><span id="p-val" style="font-size:18px;">---</span> <small>M km</small></div>
+    <div id="dist-panel"><span id="p-full" style="color:#44ff44; font-weight:bold; text-transform: uppercase;">SCANNER</span><br><span id="p-val" style="font-size:18px;">---</span> <small>M km</small></div>
 
     <div id="overlay">
-        <h1 style="letter-spacing: 12px; color:#6081FF; margin-bottom: 30px;">GamAflak</h1>
-        <div id="step-note"><p>1. FREQUENCY</p><div style="display:flex; flex-wrap:wrap; justify-content:center;">
+        <h1 style="letter-spacing: 12px; color:#ff4444; margin-bottom: 30px;">GamAflak</h1>
+        <div id="step-note"><p style="color:#44ff44">1. FREQUENCY</p><div style="display:flex; flex-wrap:wrap; justify-content:center;">
             <button class="btn" onclick="setNote('DO', 261.63)">C / DO</button>
             <button class="btn" onclick="setNote('MI', 329.63)">E / MI</button>
             <button class="btn" onclick="setNote('FA', 349.23)">F / FA</button>
             <button class="btn" onclick="setNote('SOL', 392.00)">G / SOL</button>
         </div></div>
-        <div id="step-count" style="display:none;"><p>2. PILOTS</p>
+        <div id="step-count" style="display:none;"><p style="color:#44ff44">2. PILOTS</p>
             <button class="btn" onclick="setCount(1)">1</button><button class="btn" onclick="setCount(2)">2</button><button class="btn" onclick="setCount(4)">4</button>
         </div>
-        <div id="step-names" style="display:none;"><p id="name-prompt">PILOT 1 NAME</p>
+        <div id="step-names" style="display:none;"><p id="name-prompt" style="color:#44ff44">PILOT 1 NAME</p>
             <input type="text" id="nameInput" maxlength="10"><br><br>
-            <button class="btn" style="width:280px; background:#ffcc00; color:#000;" onclick="nextPilot()">CONFIRM</button>
+            <button class="btn" style="width:280px; background:#ff4444; color:#fff;" onclick="nextPilot()">CONFIRM MISSION</button>
         </div>
     </div>
 
@@ -80,15 +85,15 @@
     <script src="https://ably.com"></script>
     <script>
         const PLANETS = [
-            {n: "Me", full: "Mercury", r: 1.0, c: "#999", d: "57.9", v: 0.02, tc: "#000"}, // Rapide (4s / 200)
+            {n: "Me", full: "Mercury", r: 1.0, c: "#999", d: "57.9", v: 0.13, tc: "#000"}, // x30 (4s / 30)
             {n: "Ve", full: "Venus", r: 1.125, c: "#E3BB76", d: "108.2", v: 10.7, tc: "#000"},
             {n: "Ea", full: "Earth", r: 1.25, c: "#2271B3", d: "149.6", v: 18, tc: "#fff"},
             {n: "Ma", full: "Mars", r: 1.33, c: "#E27B58", d: "227.9", v: 30, tc: "#000"},
             {belt: true},
             {n: "Ju", full: "Jupiter", r: 1.5, c: "#D39C7E", d: "778.6", v: 80, tc: "#000"},
             {n: "Sa", full: "Saturn", r: 1.66, c: "#C5AB6E", d: "1433.5", v: 180, tc: "#000", rings: "sa"},
-            {n: "Ur", full: "Uranus", r: 1.87, c: "#BBE1E4", d: "2872.5", v: 1000, tc: "#000", rings: "ur"}, // Lente (10s * 100)
-            {n: "Ne", full: "Neptune", r: 2.0, c: "#6081FF", d: "4495.1", v: 1600, tc: "#fff"}  // Lente (16s * 100)
+            {n: "Ur", full: "Uranus", r: 1.87, c: "#BBE1E4", d: "2872.5", v: 500, tc: "#000", rings: "ur"}, // /50 (10s * 50)
+            {n: "Ne", full: "Neptune", r: 2.0, c: "#6081FF", d: "4495.1", v: 800, tc: "#fff"}  // /50 (16s * 50)
         ];
 
         let audioCtx, baseFreq, targetP, curIdx = 1, names = [], scores = {}, turn = 0, ably, channel;
@@ -98,14 +103,14 @@
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
             osc.type = 'square'; osc.frequency.setValueAtTime(40, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 2);
-            g.gain.setValueAtTime(0, audioCtx.currentTime); g.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 1.5);
+            osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 2.2);
+            g.gain.setValueAtTime(0, audioCtx.currentTime); g.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 1.8);
             osc.connect(g); g.connect(audioCtx.destination); osc.start(); 
             setTimeout(() => {
-                g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8); osc.stop(audioCtx.currentTime + 1);
+                g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1); osc.stop(audioCtx.currentTime + 1.1);
                 document.getElementById('intro-layer').style.opacity = '0';
                 setTimeout(() => { document.getElementById('intro-layer').style.display = 'none'; document.getElementById('overlay').style.display = 'flex'; }, 1000);
-            }, 3000);
+            }, 3200);
         }
 
         function setNote(m, f) { baseFreq = f; document.getElementById('step-note').style.display='none'; document.getElementById('step-count').style.display='block'; }
@@ -169,7 +174,7 @@
 
         function updateUI() {
             const next = names[turn]; document.getElementById('turn-display').innerText = "TURN: " + next.toUpperCase();
-            document.getElementById('player-list').innerHTML = `<div style="color:#ffcc00; font-size:10px; text-align:center; margin-bottom:5px;">MISSION RANKING</div>` + 
+            document.getElementById('player-list').innerHTML = `<div style="color:#44ff44; font-size:10px; text-align:center; margin-bottom:5px;">MISSION RANKING</div>` + 
                 Object.entries(scores).sort((a,b)=>b-a).map(([n,s]) => `<div style="display:flex; justify-content:space-between; padding:8px; margin-bottom:5px; border-radius:8px;" class="${n === next ? 'active-rank' : ''}"><span>${n}</span><b>${s}</b></div>`).join('');
         }
 
