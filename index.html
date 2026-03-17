@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GamAflak | Final System</title>
+    <title>GamAflak | S-Stop Inverted</title>
     <link href="https://googleapis.com" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
         
-        /* Intro 30° Cinématique */
+        /* Intro 30° Rouge/Vert */
         #intro-layer { position: fixed; inset: 0; background: #000; z-index: 200; display: flex; align-items: center; justify-content: center; perspective: 1200px; cursor: pointer; }
         .word { position: absolute; font-size: 8vw; font-weight: 900; letter-spacing: 5px; opacity: 0; transition: all 1.8s cubic-bezier(0.19, 1, 0.22, 1); }
         #word-game { color: #ff4444; transform: translateX(-120%) rotateY(30deg) translateZ(-400px); }
@@ -20,14 +20,12 @@
         #stars-container { position: fixed; inset: 0; z-index: 0; }
         .star { position: absolute; background: white; border-radius: 50%; opacity: 0.5; animation: twinkle var(--d) infinite; }
         
-        /* Menus */
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .btn { background: #6081FF; border: none; color: white; padding: 15px; border-radius: 40px; font-size: 14px; font-weight: bold; cursor: pointer; width: 140px; font-family: 'Orbitron'; margin: 5px; }
         input { background: rgba(255,255,255,0.1); border: 2px solid #6081FF; border-radius: 20px; padding: 15px; color: white; width: 280px; font-size: 18px; text-align: center; font-family: 'Orbitron'; outline: none; }
 
-        /* Jeu */
         #system-container { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; transition: transform 0.4s; }
-        #sun { width: 65px; height: 65px; background: radial-gradient(circle, #fff, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 50px #ff6600; z-index: 90; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 900; font-size: 24px; cursor: pointer; }
+        #sun { width: 70px; height: 70px; background: radial-gradient(circle, #fff, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 50px #ff6600; z-index: 90; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 900; font-size: 28px; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); }
         
         .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; animation: rotate linear infinite; pointer-events: none; }
         .orbit.glow { border: 4px solid var(--c) !important; box-shadow: 0 0 40px var(--c); z-index: 85; }
@@ -35,9 +33,8 @@
 
         #ui { position: absolute; top: 20px; left: 20px; z-index: 50; display: none; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border-left: 6px solid #ffcc00; }
         #leaderboard { position: absolute; top: 20px; right: 20px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 15px; min-width: 200px; border: 1px solid #333; }
-        #dist-panel { position: absolute; bottom: 20px; right: 20px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 1px solid #444; text-align: right; min-width: 180px; }
+        #dist-panel { position: absolute; bottom: 20px; right: 20px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 1px solid #444; text-align: right; min-width: 180px; border-right: 5px solid #6081FF; }
         
-        /* Ceintures et Anneaux */
         .asteroid { position: absolute; background: #fff; border-radius: 40%; box-shadow: 0 0 8px #fff; opacity: 0.8; }
         .rings-sa { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotateX(75deg); width: 52px; height: 52px; border: 4px solid rgba(197, 171, 110, 0.5); border-radius: 50%; }
         .rings-ur { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotateY(80deg); width: 48px; height: 48px; border: 2px solid rgba(187, 225, 228, 0.4); border-radius: 50%; }
@@ -51,19 +48,18 @@
     <div id="intro-layer" onclick="runCinematic()">
         <div id="word-game" class="word">GAME</div>
         <div id="word-aflak" class="word">AFLAK</div>
-        <p style="position:absolute; bottom:50px; font-size:10px; opacity:0.5;">CLICK TO FUSE</p>
     </div>
 
     <div id="stars-container"></div>
     <div id="ui">
-        <b id="turn-display" style="color:#ffcc00">READY</b><br>
-        <button class="btn" style="background:#ff4444; width:100%; height:30px; font-size:10px; margin-top:10px;" onclick="window.close(); location.reload();">STOP / EXIT</button>
+        <b id="turn-display" style="color:#ffcc00">PILOT READY</b><br>
+        <small style="opacity:0.6">CLICK 'S' TO EXIT</small>
     </div>
     <div id="leaderboard"><div id="player-list"></div></div>
-    <div id="dist-panel"><span id="p-full" style="color:#ffcc00; font-weight:bold;">SCANNER</span><br><span id="p-val" style="font-size:18px;">---</span> <small>M km</small></div>
+    <div id="dist-panel"><span id="p-full" style="color:#ffcc00; font-weight:bold; text-transform: uppercase;">SCANNER</span><br><span id="p-val" style="font-size:18px;">---</span> <small>M km</small></div>
 
     <div id="overlay">
-        <h1 style="letter-spacing: 12px; color:#6081FF;">GamAflak</h1>
+        <h1 style="letter-spacing: 12px; color:#6081FF; margin-bottom: 30px;">GamAflak</h1>
         <div id="step-note"><p>1. FREQUENCY</p><div style="display:flex; flex-wrap:wrap; justify-content:center;">
             <button class="btn" onclick="setNote('DO', 261.63)">C / DO</button>
             <button class="btn" onclick="setNote('MI', 329.63)">E / MI</button>
@@ -79,20 +75,20 @@
         </div>
     </div>
 
-    <div id="system-container"><div id="sun" title="SOLEIL" onclick="location.reload()">S</div></div>
+    <div id="system-container"><div id="sun" onclick="location.reload()">S</div></div>
 
     <script src="https://ably.com"></script>
     <script>
         const PLANETS = [
-            {n: "Me", full: "Mercury", r: 1.0, c: "#999", d: "57.9", v: 400, tc: "#000"}, // Ralentie x100
-            {n: "Ve", full: "Venus", r: 1.125, c: "#E3BB76", d: "108.2", v: 10.7, tc: "#000"}, // Normale
+            {n: "Me", full: "Mercury", r: 1.0, c: "#999", d: "57.9", v: 0.02, tc: "#000"}, // Rapide (4s / 200)
+            {n: "Ve", full: "Venus", r: 1.125, c: "#E3BB76", d: "108.2", v: 10.7, tc: "#000"},
             {n: "Ea", full: "Earth", r: 1.25, c: "#2271B3", d: "149.6", v: 18, tc: "#fff"},
             {n: "Ma", full: "Mars", r: 1.33, c: "#E27B58", d: "227.9", v: 30, tc: "#000"},
             {belt: true},
             {n: "Ju", full: "Jupiter", r: 1.5, c: "#D39C7E", d: "778.6", v: 80, tc: "#000"},
             {n: "Sa", full: "Saturn", r: 1.66, c: "#C5AB6E", d: "1433.5", v: 180, tc: "#000", rings: "sa"},
-            {n: "Ur", full: "Uranus", r: 1.87, c: "#BBE1E4", d: "2872.5", v: 10, tc: "#000", rings: "ur"}, // x50 (500s/50)
-            {n: "Ne", full: "Neptune", r: 2.0, c: "#6081FF", d: "4495.1", v: 16, tc: "#fff"} // x50 (800s/50)
+            {n: "Ur", full: "Uranus", r: 1.87, c: "#BBE1E4", d: "2872.5", v: 1000, tc: "#000", rings: "ur"}, // Lente (10s * 100)
+            {n: "Ne", full: "Neptune", r: 2.0, c: "#6081FF", d: "4495.1", v: 1600, tc: "#fff"}  // Lente (16s * 100)
         ];
 
         let audioCtx, baseFreq, targetP, curIdx = 1, names = [], scores = {}, turn = 0, ably, channel;
