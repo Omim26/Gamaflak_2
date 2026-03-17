@@ -3,38 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GamAflak | Pro Edition</title>
+    <title>GamAflak | 45° Perspective</title>
     <link href="https://googleapis.com" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
         
-        /* Intro 3D améliorée */
+        /* Intro Cinematic 45° */
         #intro-layer { position: fixed; inset: 0; background: #000; z-index: 200; display: flex; align-items: center; justify-content: center; perspective: 1200px; cursor: pointer; }
-        .word { position: absolute; font-size: 8vw; font-weight: 900; letter-spacing: 5px; opacity: 0; transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        #word-game { color: #6081FF; transform: translateX(-150%) rotateY(90deg); }
-        #word-aflak { color: #ffcc00; transform: translateX(150%) rotateY(-90deg); }
-        .fusion-active #word-game { opacity: 1; transform: translateX(-42%) rotateY(0deg); }
-        .fusion-active #word-aflak { opacity: 1; transform: translateX(45%) rotateY(0deg); }
+        .word { position: absolute; font-size: 8vw; font-weight: 900; letter-spacing: 5px; opacity: 0; transition: all 1.8s cubic-bezier(0.19, 1, 0.22, 1); }
+        
+        /* Position initiale en opposition à 45 degrés */
+        #word-game { color: #6081FF; transform: translateX(-120%) rotateY(45deg) translateZ(-500px); }
+        #word-aflak { color: #ffcc00; transform: translateX(120%) rotateY(-45deg) translateZ(-500px); }
+        
+        /* Fusion centrale à plat */
+        .fusion-active #word-game { opacity: 1; transform: translateX(-42%) rotateY(0deg) translateZ(0); }
+        .fusion-active #word-aflak { opacity: 1; transform: translateX(45%) rotateY(0deg) translateZ(0); }
 
-        /* Background & UI */
         #stars-container { position: fixed; inset: 0; z-index: 0; }
         .star { position: absolute; background: white; border-radius: 50%; opacity: 0.5; animation: twinkle var(--d) infinite; }
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
-        .btn { background: #6081FF; border: none; color: white; padding: 18px; border-radius: 40px; font-size: 14px; font-weight: bold; cursor: pointer; width: 150px; font-family: 'Orbitron'; }
+        .btn { background: #6081FF; border: none; color: white; padding: 15px; border-radius: 40px; font-size: 14px; font-weight: bold; cursor: pointer; width: 140px; font-family: 'Orbitron'; }
         input { background: rgba(255,255,255,0.1); border: 2px solid #6081FF; border-radius: 20px; padding: 15px; color: white; width: 280px; font-size: 18px; text-align: center; font-family: 'Orbitron'; outline: none; }
 
-        /* Game System */
         #system-container { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; transition: transform 0.4s; }
-        #sun { width: 70px; height: 70px; background: radial-gradient(circle, #fff, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 60px #ff6600; z-index: 90; font-weight: bold; display: flex; align-items: center; justify-content: center; color: #000; }
+        #sun { width: 65px; height: 65px; background: radial-gradient(circle, #fff, #ffcc00, #ff6600); border-radius: 50%; box-shadow: 0 0 50px #ff6600; z-index: 90; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 900; font-size: 24px; }
         .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; animation: rotate linear infinite; pointer-events: none; }
         .orbit.glow { border: 4px solid var(--c) !important; box-shadow: 0 0 40px var(--c); z-index: 85; }
-        .planet { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 34px; height: 34px; border-radius: 50%; cursor: pointer; pointer-events: auto; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.5); }
+        .planet { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; pointer-events: auto; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.5); }
 
         #ui { position: absolute; top: 20px; left: 20px; z-index: 50; display: none; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; backdrop-filter: blur(10px); border-left: 6px solid #ffcc00; }
         #leaderboard { position: absolute; top: 20px; right: 20px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 15px; min-width: 200px; border: 1px solid #333; }
-        .active-rank { background: rgba(255, 204, 0, 0.4); color: #ffcc00; border: 1px solid #ffcc00; }
+        #dist-panel { position: absolute; bottom: 20px; right: 20px; z-index: 50; display: none; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border: 1px solid #444; text-align: right; min-width: 180px; border-right: 5px solid #6081FF; }
+        
+        .exit-btn { background: #ff4444 !important; margin-top: 10px; padding: 8px !important; font-size: 10px !important; width: 100% !important; }
 
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
@@ -45,12 +49,15 @@
     <div id="intro-layer" onclick="runCinematic()">
         <div id="word-game" class="word">GAME</div>
         <div id="word-aflak" class="word">AFLAK</div>
-        <p style="position:absolute; bottom:60px; font-size:12px; letter-spacing:5px; animation: twinkle 2s infinite;">TAP TO FUSE</p>
     </div>
 
     <div id="stars-container"></div>
-    <div id="ui"><b id="turn-display" style="color:#ffcc00">INITIALIZING</b><br><small>SCANNING FREQUENCIES...</small></div>
+    <div id="ui">
+        <b id="turn-display" style="color:#ffcc00">PILOT READY</b><br>
+        <button class="btn exit-btn" onclick="location.reload()">EXIT GAME</button>
+    </div>
     <div id="leaderboard"><div id="player-list"></div></div>
+    <div id="dist-panel"><span id="p-full" style="color:#ffcc00; font-weight:bold; text-transform: uppercase;">SCANNER</span><br><span id="p-val" style="font-size:18px;">---</span> <small>M km</small></div>
 
     <div id="overlay">
         <h1 style="letter-spacing: 12px; color:#6081FF; margin-bottom: 30px;">GamAflak</h1>
@@ -79,20 +86,20 @@
         </div>
     </div>
 
-    <div id="system-container"><div id="sun">SUN</div></div>
+    <div id="system-container"><div id="sun">S</div></div>
 
     <script src="https://ably.com"></script>
     <script>
         const PLANETS = [
-            {n: "Me", r: 1.0, c: "#999", v: 5, tc: "#000"},
-            {n: "Ve", r: 1.125, c: "#E3BB76", v: 5000, tc: "#000"}, // Ralentie x500
-            {n: "Ea", r: 1.25, c: "#2271B3", v: 18, tc: "#fff"},
-            {n: "Ma", r: 1.33, c: "#E27B58", v: 30, tc: "#000"},
+            {n: "Me", full: "Mercury", r: 1.0, c: "#999", d: "57.9", v: 2000, tc: "#000"},
+            {n: "Ve", full: "Venus", r: 1.125, c: "#E3BB76", d: "108.2", v: 10.7, tc: "#000"},
+            {n: "Ea", full: "Earth", r: 1.25, c: "#2271B3", d: "149.6", v: 18, tc: "#fff"},
+            {n: "Ma", full: "Mars", r: 1.33, c: "#E27B58", d: "227.9", v: 30, tc: "#000"},
             {belt: true},
-            {n: "Ju", r: 1.5, c: "#D39C7E", v: 80, tc: "#000"},
-            {n: "Sa", r: 1.66, c: "#C5AB6E", v: 180, tc: "#000"},
-            {n: "Ur", r: 1.87, c: "#BBE1E4", v: 0.5, tc: "#000"}, // Accélérée x1000
-            {n: "Ne", r: 2.0, c: "#6081FF", v: 0.8, tc: "#fff"}  // Accélérée x1000
+            {n: "Ju", full: "Jupiter", r: 1.5, c: "#D39C7E", d: "778.6", v: 80, tc: "#000"},
+            {n: "Sa", full: "Saturn", r: 1.66, c: "#C5AB6E", d: "1433.5", v: 180, tc: "#000"},
+            {n: "Ur", r: 1.87, full: "Uranus", c: "#BBE1E4", d: "2872.5", v: 1.0, tc: "#000"},
+            {n: "Ne", r: 2.0, full: "Neptune", c: "#6081FF", d: "4495.1", v: 1.6, tc: "#fff"}
         ];
 
         let audioCtx, baseFreq, targetP, curIdx = 1, names = [], scores = {}, turn = 0, ably, channel;
@@ -103,20 +110,21 @@
             const osc = audioCtx.createOscillator();
             const g = audioCtx.createGain();
             osc.type = 'sawtooth'; osc.frequency.setValueAtTime(30, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 2);
+            osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 2.2);
             g.gain.setValueAtTime(0, audioCtx.currentTime);
-            g.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 1.5);
+            g.gain.linearRampToValueAtTime(0.35, audioCtx.currentTime + 1.8);
             osc.connect(g); g.connect(audioCtx.destination);
             osc.start(); 
-            g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3);
             
             setTimeout(() => {
+                g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.2);
+                osc.stop(audioCtx.currentTime + 1.3);
                 document.getElementById('intro-layer').style.opacity = '0';
                 setTimeout(() => {
                     document.getElementById('intro-layer').style.display = 'none';
                     document.getElementById('overlay').style.display = 'flex';
                 }, 1000);
-            }, 3000);
+            }, 3200);
         }
 
         function setNote(m, f) { baseFreq = f; document.getElementById('step-note').style.display='none'; document.getElementById('step-count').style.display='block'; }
@@ -125,25 +133,27 @@
             let n = document.getElementById('nameInput').value.trim() || "P" + curIdx;
             names.push(n); scores[n] = 0;
             if(curIdx < targetP) { curIdx++; document.getElementById('name-prompt').innerText = "PILOT " + curIdx + " NAME"; document.getElementById('nameInput').value = ""; }
-            else { startGame(); }
+            else { launch(); }
         }
 
-        function startGame() {
+        function launch() {
             document.getElementById('overlay').style.display = 'none';
-            document.querySelectorAll('#ui, #leaderboard').forEach(e => e.style.display = 'block');
+            document.querySelectorAll('#ui, #leaderboard, #dist-panel').forEach(e => e.style.display = 'block');
             PLANETS.forEach((p, i) => { if(p.belt) createBelt(i); else createPlanet(p, i); });
             initAbly(); updateUI();
         }
 
         function createPlanet(p, i) {
             const orbit = document.createElement('div'); orbit.className = 'orbit';
-            orbit.style.width = orbit.style.height = (160 + i * 45) + "px";
+            orbit.style.width = orbit.style.height = (165 + i * 45) + "px";
             orbit.style.animationDuration = p.v + "s";
             const pl = document.createElement('div');
-            pl.className = 'planet'; pl.innerText = p.n; 
-            pl.style.backgroundColor = p.c; pl.style.color = p.tc;
+            pl.className = 'planet'; pl.innerText = p.n; pl.style.backgroundColor = p.c; pl.style.color = p.tc;
+            
             pl.onclick = (e) => {
                 e.stopPropagation(); let active = names[turn];
+                document.getElementById('p-full').innerText = p.full;
+                document.getElementById('p-val').innerText = p.d;
                 playTone(baseFreq * p.r);
                 orbit.style.setProperty('--c', p.c); orbit.classList.add('glow');
                 setTimeout(() => orbit.classList.remove('glow'), 800);
@@ -158,8 +168,8 @@
 
         function createBelt(i) {
             const belt = document.createElement('div'); belt.className = 'orbit';
-            belt.style.width = belt.style.height = (160 + i * 45) + "px";
-            belt.style.animationDuration = "40s";
+            belt.style.width = belt.style.height = (165 + i * 45) + "px";
+            belt.style.animationDuration = "45s";
             for(let j=0; j<15; j++){
                 let a = document.createElement('div'); a.style.position = 'absolute'; a.style.background = '#444';
                 a.style.width = a.style.height = '4px'; let ang = Math.random()*Math.PI*2;
@@ -181,7 +191,8 @@
 
         function updateUI() {
             const next = names[turn]; document.getElementById('turn-display').innerText = "TURN: " + next.toUpperCase();
-            document.getElementById('player-list').innerHTML = Object.entries(scores).sort((a,b)=>b[1]-a[1]).map(([n,s]) => `
+            document.getElementById('player-list').innerHTML = `<div style="color:#ffcc00; font-size:10px; text-align:center; margin-bottom:5px;">MISSION RANKING</div>` + 
+                Object.entries(scores).sort((a,b)=>b-a).map(([n,s]) => `
                 <div style="display:flex; justify-content:space-between; padding:8px; margin-bottom:5px; border-radius:8px;" class="${n === next ? 'active-rank' : ''}">
                     <span>${n}</span><b>${s}</b>
                 </div>`).join('');
